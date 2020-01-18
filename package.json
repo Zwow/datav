@@ -8,6 +8,9 @@
   },
   "dependencies": {
     "core-js": "^3.4.4",
+    "echarts": "^4.6.0",
+    "element-ui": "^2.13.0",
+    "perfect-scrollbar": "^1.5.0",
     "vue": "^2.6.10",
     "vue-router": "^3.1.3"
   },
