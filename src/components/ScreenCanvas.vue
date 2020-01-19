@@ -33,6 +33,10 @@ export default {
 .screen-canvas {
   overflow: hidden;
   position: relative;
+  background: #20252b;
+  background-image: linear-gradient(#20252b 20px, transparent 0), linear-gradient(90deg, #444 2px, transparent 0);
+  background-size: 22px 22px, 24px 24px;
+  background-position: 14px 12px;
   .canvas-view {
     position: relative;
     .canvas-wrapper {
@@ -45,8 +49,8 @@ export default {
       .canvas {
         height: 100%;
         width: 100%;
-        background-color: #1e262d;
-        box-shadow: 0 0 35px rgba(0, 0, 0, .06);
+        background-color: #313b44;
+        box-shadow: 0 0 30px rgba(0, 0, 0, .3);
       }
     }
   }

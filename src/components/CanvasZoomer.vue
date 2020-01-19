@@ -4,20 +4,14 @@
       <div class="drag-hanle"></div>
     </div>
     <div class="zoom-options">
-      <span>缩放设置</span>
-      <el-slider class="slider" v-model="zoom"></el-slider>
-      <el-select size="small" class="select">
-        <el-option v-for="(opt, index) in zoomOpts"
-                  :key="index"
-                  :value="opt.value">
-          {{ opt.zoom }}
-        </el-option>
-      </el-select>
+      <CmSlider class="slider" input-suffix="%"></CmSlider>
     </div>
   </div>
 </template>
 
 <script>
+import CmSlider from './CmSlider.vue'
+
 export default {
   data() {
     return {
@@ -37,6 +31,9 @@ export default {
         }
       ]
     }
+  },
+  components: {
+    CmSlider
   }
 }
 </script>
@@ -64,10 +61,6 @@ export default {
     align-items: center;
     padding: 0 10px;
     .slider {
-      flex: 0 0 120px;
-      margin: 0 18px;
-    }
-    .select {
       flex: 1;
     }
   }
