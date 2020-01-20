@@ -1,15 +1,24 @@
 <template>
   <div class="canvas-zoomer">
-    <div class="zoom-handle">
-      <div class="drag-hanle"></div>
+    <div class="canvas-overview">
+      <div class="drag-handle"></div>
     </div>
     <div class="zoom-options">
-      <CmSlider class="slider" input-suffix="%"></CmSlider>
+      <span>画布缩放</span>
+      <CmSlider class="slider"
+                v-model="zoom"
+                :min="20"
+                :max="150"
+                suffix="%"
+                show-input>
+      </CmSlider>
+      <CmIconButton class="icon-button" icon="fullscreen"></CmIconButton>
     </div>
   </div>
 </template>
 
 <script>
+import CmIconButton from './CmIconButton.vue'
 import CmSlider from './CmSlider.vue'
 
 export default {
@@ -33,23 +42,30 @@ export default {
     }
   },
   components: {
+    CmIconButton,
     CmSlider
+  },
+  methods: {
+
   }
 }
 </script>
 
 <style lang="scss" scoped>
+@import "../scss/vars.scss";
+
 .canvas-zoomer {
   height: 200px;
   width: 310px;
   background-color: #1D2329;
   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
-  .zoom-handle {
+  .canvas-overview {
     height: 155px;
-    .drag-hanle {
-      height: 40px;
-      width: 70px;
-      border: 2px solid #999;
+    .drag-handle {
+      height: 100%;
+      width: 100%;
+      border: 1px solid lighten($theme-color, 10%);
+      box-sizing: border-box;
       cursor: move;
     }
   }
@@ -59,9 +75,11 @@ export default {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding: 0 10px;
+    justify-content: flex-end;
+    padding: 0 5px;
     .slider {
-      flex: 1;
+      flex: 0 0 180px;
+      margin-right: 10px;
     }
   }
 }

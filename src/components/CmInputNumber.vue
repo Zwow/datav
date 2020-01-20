@@ -1,14 +1,16 @@
 <template>
-  <div class="cm-input-number" :class="{ 'input-focus': false }">
-    <CmInput v-bind="$attrs"
-            v-model="nowValue"
-            @on-blur="handleBlur"
-            :suffix="suffix"
-            :class="{ 'btn-suffix': showBtn && !!suffix }">
-    </CmInput>
-    <div class="handle-btns" v-if="showBtn">
-      <div class="handle-btn handle-plus"></div>
-      <div class="handle-btn handle-minus"></div>
+  <div class="cm-input-number-wrapper">
+    <div class="cm-input-number" :class="{ 'input-focus': false }">
+      <CmInput v-bind="$attrs"
+              v-model="nowValue"
+              @on-blur="handleBlur"
+              :suffix="suffix"
+              :class="{ 'btn-suffix': showBtn && !!suffix }">
+      </CmInput>
+      <div class="handle-btns" v-if="showBtn">
+        <div class="handle-btn handle-plus" @click="handleChangeValue(step)"></div>
+        <div class="handle-btn handle-minus" @click="handleChangeValue(-step)"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -19,7 +21,8 @@ import CmInput from './CmInput.vue'
 export default {
   props: {
     value: {
-      type: Number
+      type: Number,
+      default: 0
     },
     min: {
       type: Number
@@ -29,11 +32,11 @@ export default {
     },
     precise: {
       type: Number,
-      default: 0
+      default: 2
     },
     showBtn: {
       type: Boolean,
-      default: false
+      default: true
     },
     suffix: {
       type: String,
@@ -61,43 +64,58 @@ export default {
         return 0
       }
       return val
+    },
+    step() {
+      return 1 / Math.pow(10, this.propPrecise)
     }
   },
   methods: {
+    handleChangeValue(value) {
+      this.emitChangeEvents(parseFloat(this.nowValue) + value)
+    },
     handleBlur() {
-      if (this.nowValue === '') {
-        return this.checkValue(0)
+      const val = +this.nowValue
+      // not number
+      if (Number.isNaN(val)) {
+        this.nowValue = this.preValue
+        return
       }
-      // 整数或小数
-      if (/^\d*\.?\d+$/.test(this.nowValue)) {
-        return this.checkValue(this.nowValue)
-      }
-      this.nowValue = this.preValue
+      this.checkValue(val)
     },
     trim(val) {
       if (this.propPrecise === 0) {
         return parseInt(val)
       }
-      return parseFloat(val.toString().replace(/(\.)(\d+)/, (a, b, c) => `${b}${c.slice(0, this.propPrecise)}`))
+      return val.toFixed(this.propPrecise)
     },
     emitChangeEvents(val) {
-      this.$emit('input', val)
-      this.$emit('on-change', val)
+      const v = parseFloat(val)
+      this.$emit('input', v)
+      this.$emit('on-change', v)
     },
     checkValue(val) {
-      const trimVal = this.trim(val)
-      if (trimVal !== this.nowValue) {
+      const trimVal = this.trim(this.getValue(val))
+      if (trimVal != this.nowValue) {
         this.nowValue = trimVal
         this.preValue = trimVal
         this.emitChangeEvents(trimVal)
       }
+    },
+    getValue(val) {
+      if (this.min !== undefined && val < this.min) {
+        return this.min
+      }
+      if (this.max !== undefined && val > this.max) {
+        return this.max
+      }
+      return val
     }
   },
   created() {
-    const trimVal = this.trim(this.value)
+    const trimVal = this.trim(this.getValue(this.value))
     this.nowValue = trimVal
     this.preValue = trimVal
-    if (trimVal !== this.value) {
+    if (trimVal != this.value) {
       this.emitChangeEvents(trimVal)
     }
   }
@@ -107,8 +125,14 @@ export default {
 <style lang="scss">
 @import "../scss/vars.scss";
 
+.cm-input-number-wrapper {
+  display: inline-block;
+  color: $font-color-white;
+}
+
 .cm-input-number {
   position: relative;
+  overflow: hidden;
   .btn-suffix {
     input {
       padding-right: 45px !important;
@@ -124,7 +148,6 @@ export default {
     right: 0;
     top: 0;
     border: 1px solid transparent;
-    border-left-color: #333;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -153,14 +176,24 @@ export default {
         @include operator('-');
       }
     }
-    &::after {
+    @mixin persudo-border {
+      left: 0;
+      background-color: #333;
       content: '';
       position: absolute;
+    }
+    &::before {
+      @include persudo-border;
+      width: 1px;
+      height: 100%;
+      top: 0;
+      z-index: 2;
+    }
+    &::after {
+      @include persudo-border;
       width: 100%;
       height: 1px;
       top: 50%;
-      left: 0;
-      background-color: #333;
       transform: translate3d(0, -50%, 0);
     }
   }

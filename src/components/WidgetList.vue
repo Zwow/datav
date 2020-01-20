@@ -10,14 +10,14 @@
             :class="{ active: index === active }"
             class="color-dark-gray"
             @click="handleActive(index)">
-          <el-tooltip effect="dark"
+          <!-- <el-tooltip effect="dark"
                       :content="category.name"
                       :open-delay="500"
                       placement="right"
                       v-if="index !== active">
-            <i :class="`${category.icon} icon`"></i>
-          </el-tooltip>
-          <i v-else :class="`${category.icon} icon`"></i>
+            <i :class="`${category.icon} iconfont`"></i>
+          </el-tooltip> -->
+          <i :class="`${category.icon} iconfont`"></i>
         </li>
       </ul>
       <ScrollView class="current-category-widgets">
@@ -54,7 +54,7 @@ export default {
       // test: null,
       categories: [
         {
-          icon: 'el-icon-pie-chart',
+          icon: 'icon-chart',
           name: '常规图表',
           children: [
             {
@@ -96,12 +96,12 @@ export default {
           ]
         },
         {
-          icon: 'el-icon-map-location',
+          icon: 'icon-map',
           name: '地图',
           children: []
         },
         {
-          icon: 'el-icon-tickets',
+          icon: 'icon-text',
           name: '文本',
           children: []
         },
@@ -159,8 +159,8 @@ $header-height: 30px;
         align-items: center;
         cursor: pointer;
         position: relative;
-        .icon {
-          font-size: 1.5rem;
+        .iconfont {
+          font-size: 1.6rem;
         }
         &.active {
           color: lighten($theme-color, 10%);

@@ -58,7 +58,7 @@ export default {
     width: 100%;
     box-sizing: border-box;
     outline: none;
-    border: 1px solid #222;
+    border: 1px solid $border-color-dark;
     padding: 4px 8px;
     background-color: #444;
     transition: .2s;

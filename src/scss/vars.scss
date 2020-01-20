@@ -1,4 +1,32 @@
+/***
+  FONT
+*/
 $font-size-base: 14px;
+$font-size-small: 12px;
 $font-color-base: #ccc;
+$font-color-dark: #888;
+$font-color-white: #fff;
+
+
+/***
+  BORDER
+*/
+$border-color-dark: #111;
+$border-color-light: #ccc;
+
+
+/***
+  BACKGROUND
+*/
+$background-medium-dark: #282d33;
+$background-rare-dark: #444;
+$background-rare-dark-hover: #666;
 
 $theme-color: #6451f7;
+
+
+/***
+  BUTTON
+*/
+$button-padding-base: 4px 10px;
+$mini-button-padding: 2px 4px;

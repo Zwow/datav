@@ -4,7 +4,9 @@
     <div class="app-body">
       <WidgetList class="widget-list"></WidgetList>
       <ScreenCanvas class="screen-canvas"></ScreenCanvas>
-      <SettingPanel class="setting-panel"></SettingPanel>
+      <div class="side-panel">
+        <SettingPanel class="setting-panel"></SettingPanel>
+      </div>
     </div>
   </div>
 </template>
@@ -60,11 +62,14 @@ $app-widget-setting-width: 320px;
       height: 100%;
       flex: 1;
     }
-    .setting-panel {
+    .side-panel {
       height: 100%;
       flex: 0 0 $app-widget-setting-width;
       width: $app-widget-setting-width;
       @include component-color(left);
+      .setting-panel {
+        height: 60%;
+      }
     }
   }
 }
