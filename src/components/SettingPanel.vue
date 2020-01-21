@@ -7,14 +7,21 @@
       <div class="setting-row">
         <label>屏幕尺寸</label>
         <div class="content">
-          宽<CmInputNumber class="input" :precise="0" v-model="width"></CmInputNumber>
-          高<CmInputNumber class="input" :precise="0" v-model="height"></CmInputNumber>
+          宽<CmInputNumber class="size-input" :precise="0" v-model="width"></CmInputNumber>
+          高<CmInputNumber class="size-input" :precise="0" v-model="height"></CmInputNumber>
         </div>
       </div>
       <div class="setting-row">
         <label>背景颜色</label>
         <div class="content">
-          <CmColorPicker></CmColorPicker>
+          <CmColorPicker v-model="backgroundColor" @on-change="handleChange"></CmColorPicker><br/>
+          <div class="ml-10">{{ backgroundColor }}</div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label>背景图</label>
+        <div class="content">
+          <CmInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></CmInput>
         </div>
       </div>
     </section>
@@ -24,18 +31,26 @@
 <script>
 import CmInputNumber from './CmInputNumber.vue'
 import CmColorPicker from './CmColorPicker.vue'
+import CmInput from './CmInput.vue'
 
 export default {
   data() {
     return {
       width: 1920,
       height: 1080,
-      backgroundColor: '#ffffff'
+      backgroundColor: 'purple',
+      backgroundUrl: ''
     }
   },
   components: {
     CmInputNumber,
-    CmColorPicker
+    CmColorPicker,
+    CmInput
+  },
+  methods: {
+    handleChange(v) {
+      console.log(v)
+    }
   }
 }
 </script>
@@ -54,10 +69,10 @@ export default {
   section {
     .setting-row {
       display: flex;
-      margin: 20px 0;
+      margin: 30px 10px;
       label {
         flex: 0 0 80px;
-        margin-right: 20px;
+        margin-right: 15px;
         text-align: center;
       }
       .content {
@@ -66,7 +81,7 @@ export default {
         align-items: center;
         font-size: $font-size-small;
         color: $font-color-dark;
-        .input {
+        .size-input {
           width: 75px;
           margin-left: 5px;
           margin-right: 15px;

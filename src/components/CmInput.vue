@@ -1,13 +1,16 @@
 <template>
   <div class="cm-input-wrapper"
-      :class="{ suffix: !!suffix, prefix: !!prefix }"
+      :class="{ [`suffix${suffixIcon ? '-icon' : ''}`]: suffixIcon || suffix, [`prefix${prefixIcon ? '-icon' : ''}`]: prefixIcon || prefix }"
       :data-suffix="suffix"
       :data-prefix="prefix">
     <input type="text"
           :value="inputValue"
+          :placeholder="placeholder"
           @input="handleInput"
           @focus="$emit('on-focus')"
           @blur="$emit('on-blur')">
+    <i v-if="prefixIcon" :class="`cm-prefix-icon iconfont icon-${prefixIcon}`"></i>
+    <i v-if="suffixIcon" :class="`cm-suffix-icon iconfont icon-${suffixIcon}`"></i>
   </div>
 </template>
 
@@ -24,6 +27,16 @@ export default {
     prefix: {
       type: String,
       default: ''
+    },
+    placeholder: {
+      type: String,
+      default: ''
+    },
+    prefixIcon: {
+      type: String
+    },
+    suffixIcon: {
+      type: String
     }
   },
   data() {
@@ -63,15 +76,22 @@ export default {
     background-color: #444;
     transition: .2s;
     color: #fff;
+    z-index: 0;
     &:focus {
       background-color: #555;
       border-color: $theme-color;
+      &~.iconfont {
+        color: lighten($theme-color, 10);
+      }
     }
   }
-  @mixin input-mixin($placement) {
+  @mixin input-padding($placement) {
     input {
       padding-#{if($placement == prefix, left, right)}: 24px;
     }
+  }
+  @mixin input-mixin($placement) {
+    @include input-padding($placement);
     &::#{if($placement == prefix, before, after)} {
       pointer-events: none;
       content: attr(data-#{$placement});
@@ -90,6 +110,25 @@ export default {
   }
   &.suffix {
     @include input-mixin(suffix);
+  }
+  &.prefix-icon {
+    @include input-padding(prefix);
+    .cm-prefix-icon {
+      left: 5px;
+    }
+  }
+  &.suffix-icon {
+    @include input-padding(suffix);
+    .cm-suffix-icon {
+      right: 5px;
+    }
+  }
+  .iconfont {
+    position: absolute;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+    color: $font-color-dark;
+    font-size: $font-size-medium;
   }
 }
 </style>

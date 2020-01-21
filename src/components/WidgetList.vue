@@ -27,7 +27,7 @@
               :key="index">
             <div class="child-category-header" @click="handleToggleCategory(index)">
               <span class="name">{{ category.name }}</span>
-              <i :class="`el-icon-arrow-${category.collapsed ? 'right' : 'down'} icon`"></i>
+              <i :class="`iconfont icon-arrow-${category.collapsed ? 'right' : 'down'} icon`"></i>
             </div>
             <div class="child-category-content" v-show="!category.collapsed">
               <div class="widget-item"
