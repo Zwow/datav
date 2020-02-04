@@ -6,6 +6,7 @@
       <ScreenCanvas class="screen-canvas"></ScreenCanvas>
       <div class="side-panel">
         <SettingPanel class="setting-panel"></SettingPanel>
+        <LayerPanel class="layer-panel"></LayerPanel>
       </div>
     </div>
   </div>
@@ -16,6 +17,7 @@ import AppHeader from '@/components/AppHeader.vue'
 import WidgetList from '@/components/WidgetList.vue'
 import ScreenCanvas from '@/components/ScreenCanvas.vue'
 import SettingPanel from '@/components/SettingPanel.vue'
+import LayerPanel from '@/components/LayerPanel.vue'
 
 export default {
   name: 'index',
@@ -26,7 +28,8 @@ export default {
     AppHeader,
     WidgetList,
     ScreenCanvas,
-    SettingPanel
+    SettingPanel,
+    LayerPanel
   },
   methods: {
   }
@@ -69,6 +72,9 @@ $app-widget-setting-width: 320px;
       @include component-color(left);
       .setting-panel {
         height: 60%;
+      }
+      .layer-panel {
+        height: 40%;
       }
     }
   }

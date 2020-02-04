@@ -3,32 +3,35 @@
     <div class="setting-title">
       屏幕设置
     </div>
-    <section>
-      <div class="setting-row">
-        <label>屏幕尺寸</label>
-        <div class="content">
-          宽<CmInputNumber class="size-input" :precise="0" v-model="width"></CmInputNumber>
-          高<CmInputNumber class="size-input" :precise="0" v-model="height"></CmInputNumber>
+    <ScrollView class="setting-panel-body">
+      <template>
+        <div class="setting-row">
+          <label>屏幕尺寸</label>
+          <div class="content">
+            宽<CmInputNumber class="size-input" :precise="0" v-model="width"></CmInputNumber>
+            高<CmInputNumber class="size-input" :precise="0" v-model="height"></CmInputNumber>
+          </div>
         </div>
-      </div>
-      <div class="setting-row">
-        <label>背景颜色</label>
-        <div class="content">
-          <CmColorPicker v-model="backgroundColor" @on-change="handleChange"></CmColorPicker><br/>
-          <div class="ml-10">{{ backgroundColor }}</div>
+        <div class="setting-row">
+          <label>背景颜色</label>
+          <div class="content">
+            <CmColorPicker v-model="backgroundColor" @on-change="handleChange"></CmColorPicker><br/>
+            <div class="ml-10">{{ backgroundColor }}</div>
+          </div>
         </div>
-      </div>
-      <div class="setting-row">
-        <label>背景图</label>
-        <div class="content">
-          <CmInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></CmInput>
+        <div class="setting-row">
+          <label>背景图</label>
+          <div class="content">
+            <CmInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></CmInput>
+          </div>
         </div>
-      </div>
-    </section>
+      </template>
+    </ScrollView>
   </div>
 </template>
 
 <script>
+import ScrollView from './ScrollView.vue'
 import CmInputNumber from './CmInputNumber.vue'
 import CmColorPicker from './CmColorPicker.vue'
 import CmInput from './CmInput.vue'
@@ -43,6 +46,7 @@ export default {
     }
   },
   components: {
+    ScrollView,
     CmInputNumber,
     CmColorPicker,
     CmInput
@@ -66,7 +70,8 @@ export default {
     line-height: 36px;
     padding: 0 10px;
   }
-  section {
+  .setting-panel-body {
+    height: calc(100% - 36px);
     .setting-row {
       display: flex;
       margin: 30px 10px;
