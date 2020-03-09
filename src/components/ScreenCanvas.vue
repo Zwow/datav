@@ -47,7 +47,7 @@ import CanvasZoomer from './CanvasZoomer.vue'
 
 // todo
 // 1、给各种事件加debounce
-// 2、不应该允许将width, height设置为0，最小也要>0，如0.00001, 否则无法恢复
+// 2、不应该允许将width, height设置为0，最小也要>0，如0.00001, 否则无法恢复?
 
 function posTransform(item, value, refs) {
   // s, e
