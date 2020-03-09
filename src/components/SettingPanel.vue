@@ -16,7 +16,6 @@
           <label>背景颜色</label>
           <div class="content">
             <CmColorPicker v-model="backgroundColor" @on-change="handleChange"></CmColorPicker><br/>
-            <div class="ml-10">{{ backgroundColor }}</div>
           </div>
         </div>
         <div class="setting-row">

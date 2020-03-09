@@ -2,8 +2,9 @@
   <div class="cm-input-number-wrapper">
     <div class="cm-input-number" :class="{ 'input-focus': false }">
       <CmInput v-bind="$attrs"
-              v-model="nowValue"
+              v-model="input"
               @on-blur="handleBlur"
+              @keypress.enter.native="handleBlur"
               :suffix="suffix"
               :class="{ 'btn-suffix': showBtn && !!suffix }">
       </CmInput>
@@ -48,13 +49,12 @@ export default {
   },
   data() {
     return {
-      nowValue: 0,
-      preValue: 0
+      input: 0
     }
   },
   watch: {
     value(nv) {
-      this.checkValue(nv)
+      this.input = this.getDisplayValue(nv)
     }
   },
   computed: {
@@ -65,43 +65,28 @@ export default {
       }
       return val
     },
+    pow() {
+      return Math.pow(10, this.propPrecise)
+    },
     step() {
-      return 1 / Math.pow(10, this.propPrecise)
+      return 1 / this.pow
     }
   },
   methods: {
     handleChangeValue(value) {
-      this.emitChangeEvents(parseFloat(this.nowValue) + value)
-    },
-    handleBlur() {
-      const val = +this.nowValue
-      // not number
-      if (Number.isNaN(val)) {
-        this.nowValue = this.preValue
-        return
-      }
-      this.checkValue(val)
-    },
-    trim(val) {
-      if (this.propPrecise === 0) {
-        return parseInt(val)
-      }
-      return val.toFixed(this.propPrecise)
-    },
-    emitChangeEvents(val) {
-      const v = parseFloat(val)
-      this.$emit('input', v)
-      this.$emit('on-change', v)
+      this.checkValue(this.value + value)
     },
     checkValue(val) {
-      const trimVal = this.trim(this.getValue(val))
-      if (trimVal != this.nowValue) {
-        this.nowValue = trimVal
-        this.preValue = trimVal
-        this.emitChangeEvents(trimVal)
+      const trimed = this.trimValue(val)
+      if (trimed !== this.value) {
+        this.$emit('input', trimed)
+        this.$emit('on-change', trimed)
+      } else if (val !== this.value) {
+        // 相较真正的值有改动，撤回
+        this.input = this.getDisplayValue(this.value)
       }
     },
-    getValue(val) {
+    trimValue(val) {
       if (this.min !== undefined && val < this.min) {
         return this.min
       }
@@ -109,15 +94,27 @@ export default {
         return this.max
       }
       return val
+    },
+    getDisplayValue() {
+      if (this.propPrecise === 0) {
+        return this.value
+      }
+      return (Math.floor(this.value * this.pow) / this.pow).toFixed(this.propPrecise)
+    },
+    handleBlur() {
+      // format number
+      const value = +this.input
+      // not number, restore
+      if (Number.isNaN(value) || value === this.value) {
+        this.input = this.getDisplayValue(this.value)
+        return
+      }
+      this.checkValue(value)
     }
   },
   created() {
-    const trimVal = this.trim(this.getValue(this.value))
-    this.nowValue = trimVal
-    this.preValue = trimVal
-    if (trimVal != this.value) {
-      this.emitChangeEvents(trimVal)
-    }
+    this.input = this.getDisplayValue(this.value)
+    this.checkValue(this.value)
   }
 }
 </script>

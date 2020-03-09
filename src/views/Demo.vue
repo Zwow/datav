@@ -498,7 +498,7 @@ export default {
       this.relativeElement = id
       // 在widget-mask按下
       if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1) {
-        // pageX - offsets[0] === widget左上端点到container左上端点的X距离， Y同理
+        // pageX - this.offsets[0] === widget左上端点到container左上端点的X距离， Y同理
         const rect = this.$refs.container.getBoundingClientRect()
         if (this.selectedWidget.indexOf(id) !== -1) {
           this.offsets = [offsetX + rect.left + window.scrollX, offsetY + rect.top + window.scrollY]

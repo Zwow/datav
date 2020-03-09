@@ -18,35 +18,28 @@
 </template>
 
 <script>
+import { mapGetters, mapMutations } from 'vuex'
 import CmIconButton from './CmIconButton.vue'
 import CmSlider from './CmSlider.vue'
 
 export default {
-  data() {
-    return {
-      zoom: 50,
-      zoomOpts: [
-        {
-          zoom: '100%',
-          value: 100
-        },
-        {
-          zoom: '50%',
-          value: 50
-        },
-        {
-          zoom: '自适应',
-          value: -1
-        }
-      ]
-    }
-  },
   components: {
     CmIconButton,
     CmSlider
   },
+  computed: {
+    ...mapGetters(['canvasZoomLevel']),
+    zoom: {
+      get() {
+        return this.canvasZoomLevel
+      },
+      set(value) {
+        this.setCanvasZoom(value)
+      }
+    }
+  },
   methods: {
-
+    ...mapMutations(['setCanvasZoom'])
   }
 }
 </script>
