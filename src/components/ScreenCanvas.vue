@@ -119,12 +119,18 @@ const DRAG = 1,
           axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
           transform: posTransform, sync: posSyncTransform, ssync: seSyncTransform, nsync: neSyncTransform
         },
-        s: { axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0, transform: posTransform, sync: posSyncTransform },
+        s: {
+          axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0,
+          transform: posTransform, sync: posSyncTransform
+        },
         w: {
           axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
           transform: ngtTransform, sync: ngtSyncTransform, ssync: swSyncTransform, nsync: nwSyncTransform
         },
-        n: { axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0, transform: ngtTransform, sync: ngtSyncTransform }
+        n: {
+          axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0,
+          transform: ngtTransform, sync: ngtSyncTransform
+        }
       }
 
 // keycode
@@ -170,6 +176,10 @@ export default {
       offsets: [0, 0],
       cursor: 'n',
       widgets: [],
+      // containter left corner to page left corner, [left, top]
+      // update when this component mounted
+      // get it by containerRect[mapping.index]
+      containerRect: [],
       downPoint: [],
       cursors: [
         {
@@ -216,6 +226,10 @@ export default {
     }
   },
   methods: {
+    getContainerRect() {
+      const rect = this.$refs.container.getBoundingClientRect()
+      this.containerRect = [rect.left, rect.top]
+    },
     handleAlignTopLeft(alignLeft) {
       const i = alignLeft ? 0 : 1
       let v = this.widgets[this.selectedWidget[0]].transform[i]
@@ -258,7 +272,6 @@ export default {
       const interval = selected.slice(0, -1).reduce((res, id, index) => {
         const next = selected[index + 1]
         res += (this.widgets[next].transform[i] - this.widgets[id].transform[i] - this.widgets[id][dim])
-        console.log(res)
         return res
       }, 0) / (selected.length - 1)
       selected.slice(1, -1).forEach((id, index) => {
@@ -386,7 +399,8 @@ export default {
       Array.prototype.forEach.call(cursor, (direction) => {
         const map = mapping[direction],
               transform = this.widgets[this.relativeElement].transform[map.index],
-              value = e[`page${map.axis}`] - transform,
+              // 这里要减去container-wrapper距离页面左上角的xy值
+              value = e[`page${map.axis}`] - this.containerRect[map.index] - transform,
               refs = this.widgets[this.relativeElement][map.dim]
         this.selectedWidget.forEach((index) => {
           const target = this.widgets[index]
@@ -415,6 +429,7 @@ export default {
   },
   mounted() {
     this.setRatio()
+    this.getContainerRect()
     this.handleNewChart()
   },
   beforeDestroy() {
@@ -451,8 +466,8 @@ export default {
   }
   .container-wrapper {
     position: absolute;
-    left: 2%;
-    top: 2%;
+    left: 20px;
+    top: 20px;
     background-color: #313b44;
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
   }
