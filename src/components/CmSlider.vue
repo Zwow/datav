@@ -11,6 +11,7 @@
     </div>
     <label v-if="showValue && !showInput">{{ `${prefix}${value}${suffix}` }}</label>
     <CmInputNumber class="cm-input-number"
+                  :style="{ width: `${inputWidth}px` }"
                   v-if="showInput"
                   :max="max"
                   :min="min"
@@ -48,6 +49,10 @@ export default {
     showInput: {
       type: Boolean,
       default: false
+    },
+    inputWidth: {
+      type: Number,
+      default: 56
     },
     prefix: {
       type: String,

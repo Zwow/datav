@@ -1,36 +1,39 @@
 <template>
-  <div class="screen-canvas">
-    <div class="container-wrapper"
-        :style="{ padding: `${canvasHeight / canvasWidth * canvasZoomLevel}% ${canvasZoomLevel}%` }">
-      <div class="container"
-          ref="container"
-          @mousedown="handleMouseDown"
-          @mouseup="handleMouseUp"
-          @mousemove="handleMouseMove">
-        <div v-for="(widget, id) in widgets"
-            :key="id"
-            class="widget-wrapper"
+  <div class="screen-canvas" ref="canvas">
+    <div class="screen"
+        ref="screen"
+        :style="{
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `translate3D(${screenLeft}px, ${screenTop}px, 0)`,
+          backgroundColor
+        }"
+        @mousedown="handleMouseDown"
+        @mouseup="handleMouseUp"
+        @mousemove="handleMouseMove">
+      <div v-for="(widget, id) in widgets"
+          :key="id"
+          class="widget-wrapper"
+          :style="{
+            transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
+            zIndex: widget.index
+          }">
+        <div class="widget"
+            ref="widget"
             :style="{
-              transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
-              zIndex: widget.index
+              height: `${widget.height}px`,
+              width: `${widget.width}px`,
+              backgroundColor: widget.backgroundColor
             }">
-          <div class="widget"
-              ref="widget"
-              :style="{
-                height: `${widget.height}px`,
-                width: `${widget.width}px`,
-                backgroundColor: widget.backgroundColor
-              }">
-          </div>
-          <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
-            <span class="cursor"
-                  v-for="(cursor, index) in cursors"
-                  :key="index"
-                  :data-id="id"
-                  :data-cursor="cursor.dr"
-                  :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
-            </span>
-          </div>
+        </div>
+        <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
+          <span class="cursor"
+                v-for="(cursor, index) in cursors"
+                :key="index"
+                :data-id="id"
+                :data-cursor="cursor.dr"
+                :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
+          </span>
         </div>
       </div>
     </div>
@@ -39,7 +42,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
 import echarts from 'echarts'
 import Vue from 'vue'
 import { debounce } from '@/util/helpers'
@@ -145,18 +148,6 @@ class Widget {
     this.transform = [0, 0]
     this.index = 0
   }
-  set height(v) {
-    this._height = v
-  }
-  get height() {
-    return this._height
-  }
-  set width(v) {
-    this._width = v
-  }
-  get width() {
-    return this._width
-  }
 }
 
 export default {
@@ -165,9 +156,9 @@ export default {
   },
   data() {
     return {
-      ratio: 1,
-      canvasWidth: 1920,
-      canvasHeight: 1080,
+      // screen offset from canvas
+      screenLeft: 20,
+      screenTop: 20,
       selectedWidget: [],
       // element to be dragged, resized
       relativeElement: null,
@@ -178,8 +169,8 @@ export default {
       widgets: [],
       // containter left corner to page left corner, [left, top]
       // update when this component mounted
-      // get it by containerRect[mapping.index]
-      containerRect: [],
+      // get it by screenRect[mapping.index]
+      screenRect: [],
       downPoint: [],
       cursors: [
         {
@@ -218,17 +209,29 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['canvasZoomLevel'])
+    ...mapGetters(['canvasZoomLevel', 'screenHeight', 'screenWidth', 'backgroundColor']),
+    height() {
+      return this.canvasZoomLevel * this.screenHeight
+    },
+    width() {
+      return this.canvasZoomLevel * this.screenWidth
+    }
   },
   watch: {
-    canvasZoomLevel() {
-      this.setRatio()
+    canvasZoomLevel(nv, old) {
+      console.log('zoom diff: ', (nv - old) / old)
+      this.scaleWidgets((nv - old) / old)
+    },
+    screenWidth() {
+      // this.setRatio()
     }
   },
   methods: {
-    getContainerRect() {
-      const rect = this.$refs.container.getBoundingClientRect()
-      this.containerRect = [rect.left, rect.top]
+    ...mapMutations(['setCanvasZoom']),
+    getScreenRect() {
+      // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
+      const rect = this.$refs.screen.getBoundingClientRect()
+      this.screenRect = [rect.left, rect.top]
     },
     handleAlignTopLeft(alignLeft) {
       const i = alignLeft ? 0 : 1
@@ -322,8 +325,8 @@ export default {
       this.relativeElement = id
       // 在widget-mask按下
       if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1) {
-        // pageX - this.offsets[0] === widget左上端点到container左上端点的X距离， Y同理
-        const rect = this.$refs.container.getBoundingClientRect()
+        // pageX - this.offsets[0] === widget左上端点到screen左上端点的X距离， Y同理
+        const rect = this.$refs.screen.getBoundingClientRect()
         if (this.selectedWidget.indexOf(id) !== -1) {
           this.offsets = [offsetX + rect.left + window.scrollX, offsetY + rect.top + window.scrollY]
           this.mode = DRAG
@@ -399,8 +402,8 @@ export default {
       Array.prototype.forEach.call(cursor, (direction) => {
         const map = mapping[direction],
               transform = this.widgets[this.relativeElement].transform[map.index],
-              // 这里要减去container-wrapper距离页面左上角的xy值
-              value = e[`page${map.axis}`] - this.containerRect[map.index] - transform,
+              // 这里要减去screen距离页面左上角的xy值
+              value = e[`page${map.axis}`] - this.screenRect[map.index] - transform,
               refs = this.widgets[this.relativeElement][map.dim]
         this.selectedWidget.forEach((index) => {
           const target = this.widgets[index]
@@ -414,23 +417,31 @@ export default {
     },
     keyupHandler() {
     },
-    setRatio() {
-      const w = parseFloat(getComputedStyle(this.$refs.container, null).width)
-      const ratio = w / this.canvasWidth
-      const scale = ratio / this.ratio
-      this.ratio = ratio
+    scaleWidgets(diff) {
       this.widgets.forEach(widget => {
-        this.$set(widget, 'height', widget.height * scale)
-        this.$set(widget, 'width', widget.width * scale)
-        this.$set(widget, 'transform', widget.transform.map((e) => e * scale))
-        widget.chart && widget.chart.resize()
+        this.$set(widget, 'height', widget.height * (1 + diff))
+        this.$set(widget, 'width', widget.width * (1 + diff))
+        this.$set(widget, 'transform', widget.transform.map((e) => e * (1 + diff)))
+        this.$nextTick(() => {
+          widget.chart && widget.chart.resize()
+        })
       })
+    },
+    getProperZoomLevel() {
+      const width = parseFloat(getComputedStyle(this.$refs.canvas, null).width),
+            displayScreenWidth = width - this.screenLeft * 2,
+            zoomLevel = displayScreenWidth / this.screenWidth
+      this.setCanvasZoom(zoomLevel)
     }
   },
   mounted() {
-    this.setRatio()
-    this.getContainerRect()
-    this.handleNewChart()
+    this.$nextTick(() => {
+      // 获取screen相当对页面左上角的xy
+      this.getScreenRect()
+      // 调整画面缩放使其全部可见
+      this.getProperZoomLevel()
+      this.handleNewChart()
+    })
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.pageResizeHandler)
@@ -438,7 +449,7 @@ export default {
     document.removeEventListener('keyup', this.keydownHandler)
   },
   created() {
-    this.pageResizeHandler = debounce(this.setRatio, 300)
+    this.pageResizeHandler = debounce(this.getProperZoomLevel, 500)
     window.addEventListener('resize', this.pageResizeHandler)
     document.addEventListener('keydown', this.keydownHandler)
     document.addEventListener('keyup', this.keyupHandler)
@@ -456,27 +467,11 @@ export default {
   background-image: linear-gradient(#20252b 20px, transparent 0), linear-gradient(90deg, #444 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
   background-position: 14px 12px;
-  .container-view {
-    border: 1px solid red;
-    width: 100%;
-    position: relative;
-    height: 800px;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-  .container-wrapper {
+  .screen {
     position: absolute;
-    left: 20px;
-    top: 20px;
-    background-color: #313b44;
-    box-shadow: 0 0 30px rgba(0, 0, 0, .3);
-  }
-  .container {
-    position: absolute;
-    top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     overflow: hidden;
     .widget-wrapper {
       position: absolute;

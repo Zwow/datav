@@ -36,6 +36,8 @@ export default {
     .ps__thumb-y {
       width: 4px;
       right: 1px;
+      border-radius: 0;
+      background-color: #666;
     }
   }
 }

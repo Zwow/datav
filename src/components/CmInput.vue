@@ -84,6 +84,9 @@ export default {
         color: lighten($theme-color, 10);
       }
     }
+    &:hover {
+      background-color: #555;
+    }
   }
   @mixin input-padding($placement) {
     input {

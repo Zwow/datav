@@ -12,7 +12,7 @@
                 suffix="%"
                 show-input>
       </CmSlider>
-      <CmIconButton class="icon-button" icon="fullscreen"></CmIconButton>
+      <CmIconButton class="icon-button" icon="fullscreen" @click.native="handleSetProperZoomLevel"></CmIconButton>
     </div>
   </div>
 </template>
@@ -31,15 +31,19 @@ export default {
     ...mapGetters(['canvasZoomLevel']),
     zoom: {
       get() {
-        return this.canvasZoomLevel
+        // 显示一个整数而不是小数，但真实的zoomLevel可能不绝对等于显示的值
+        return Math.round(this.canvasZoomLevel * 100)
       },
       set(value) {
-        this.setCanvasZoom(value)
+        this.setCanvasZoom(value / 100)
       }
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoom'])
+    ...mapMutations(['setCanvasZoom']),
+    handleSetProperZoomLevel() {
+      console.log('###')
+    }
   }
 }
 </script>
