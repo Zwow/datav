@@ -156,9 +156,6 @@ export default {
   },
   data() {
     return {
-      // screen offset from canvas
-      screenLeft: 20,
-      screenTop: 20,
       selectedWidget: [],
       // element to be dragged, resized
       relativeElement: null,
@@ -209,25 +206,32 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['canvasZoomLevel', 'screenHeight', 'screenWidth', 'backgroundColor']),
+    ...mapGetters([
+      'SCREEN_LEFT', 'SCREEN_TOP', 'canvasZoomLevel',
+      'screenHeight', 'screenWidth', 'backgroundColor',
+      'zoomerTransform'
+    ]),
     height() {
       return this.canvasZoomLevel * this.screenHeight
     },
     width() {
       return this.canvasZoomLevel * this.screenWidth
-    }
+    },
+    screenLeft() {
+      return this.SCREEN_LEFT - this.width * this.zoomerTransform[0]
+    },
+    screenTop() {
+      return this.SCREEN_TOP - this.width * this.zoomerTransform[1]
+    },
   },
   watch: {
     canvasZoomLevel(nv, old) {
       console.log('zoom diff: ', (nv - old) / old)
       this.scaleWidgets((nv - old) / old)
-    },
-    screenWidth() {
-      // this.setRatio()
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoom']),
+    ...mapMutations(['setCanvasZoom', 'setProperZoomLevel']),
     getScreenRect() {
       // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()
@@ -319,6 +323,7 @@ export default {
     // drag = down + move + up
     // click = down + up
     handleMouseDown(e) {
+      e.preventDefault()
       this.downPoint = [e.pageX, e.pageY]
       const { offsetX, offsetY, target } = e,
             id = parseInt(target.dataset.id)
@@ -428,10 +433,13 @@ export default {
       })
     },
     getProperZoomLevel() {
-      const width = parseFloat(getComputedStyle(this.$refs.canvas, null).width),
-            displayScreenWidth = width - this.screenLeft * 2,
+      const canvasStyle = getComputedStyle(this.$refs.canvas, null),
+            width = parseFloat(canvasStyle.width),
+            displayScreenWidth = width - this.SCREEN_LEFT * 2,
             zoomLevel = displayScreenWidth / this.screenWidth
       this.setCanvasZoom(zoomLevel)
+      // 保存一份自适应大小时的zoomlevel
+      this.setProperZoomLevel(zoomLevel)
     }
   },
   mounted() {
@@ -464,7 +472,7 @@ export default {
   overflow: hidden;
   position: relative;
   background: #20252b;
-  background-image: linear-gradient(#20252b 20px, transparent 0), linear-gradient(90deg, #444 2px, transparent 0);
+  background-image: linear-gradient(#20252b 20px, transparent 0), linear-gradient(90deg, #5a5a5a 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
   background-position: 14px 12px;
   .screen {

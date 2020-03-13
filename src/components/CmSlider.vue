@@ -78,7 +78,9 @@ export default {
     }
   },
   methods: {
-    handleMouseDown({ srcElement, offsetX }) {
+    handleMouseDown(e) {
+      const { srcElement, offsetX } = e
+      e.preventDefault()
       // click
       if (srcElement === this.$refs.slider) {
         this.$emit('input', this.getValue(offsetX))
@@ -131,12 +133,13 @@ export default {
     height: 20px;
     position: relative;
     flex: 1;
-    margin: 0 10px;
+    margin: 0 18px 0 10px;
     cursor: pointer;
     &::before {
       content: '';
       height: 2px;
       width: 100%;
+      padding-right: 8px;
       background: linear-gradient(to right, #555, #333);
       position: absolute;
       top: 50%;
@@ -160,9 +163,6 @@ export default {
   }
   label {
     margin-right: 10px;
-  }
-  .cm-input-number {
-    width: 56px;
   }
 }
 </style>
