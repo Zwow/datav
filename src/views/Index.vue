@@ -3,7 +3,10 @@
     <AppHeader class="app-header"></AppHeader>
     <div class="app-body">
       <WidgetList class="widget-list"></WidgetList>
-      <ScreenCanvas class="screen-canvas"></ScreenCanvas>
+      <div class="screen-canvas-wrapper">
+        <ScreenCanvas class="screen-canvas"></ScreenCanvas>
+        <ScreenCanvasFooter class="screen-canvas-footer"></ScreenCanvasFooter>
+      </div>
       <div class="side-panel">
         <SettingPanel class="setting-panel"></SettingPanel>
         <LayerPanel class="layer-panel"></LayerPanel>
@@ -16,6 +19,7 @@
 import AppHeader from '@/components/AppHeader.vue'
 import WidgetList from '@/components/WidgetList.vue'
 import ScreenCanvas from '@/components/ScreenCanvas.vue'
+import ScreenCanvasFooter from '@/components/ScreenCanvasFooter.vue'
 import SettingPanel from '@/components/SettingPanel.vue'
 import LayerPanel from '@/components/LayerPanel.vue'
 
@@ -28,6 +32,7 @@ export default {
     AppHeader,
     WidgetList,
     ScreenCanvas,
+    ScreenCanvasFooter,
     SettingPanel,
     LayerPanel
   },
@@ -61,9 +66,17 @@ $app-widget-setting-width: 320px;
       width: $app-widget-list-width;
       @include component-color(right);
     }
-    .screen-canvas {
+    .screen-canvas-wrapper {
       height: 100%;
       flex: 1;
+      overflow: hidden;
+      .screen-canvas {
+        height: calc(100% - 36px);
+        width: 100%;
+      }
+      .screen-canvas-footer {
+        height: 36px;
+      }
     }
     .side-panel {
       height: 100%;

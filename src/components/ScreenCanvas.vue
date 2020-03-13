@@ -480,7 +480,7 @@ export default {
   // background-image: linear-gradient(90deg, rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%), linear-gradient(rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%);
   // background-size: 15px 15px;
   // 点阵
-  background-image: linear-gradient(#2A2E33 20px, transparent 0), linear-gradient(90deg, #666 2px, transparent 0);
+  background-image: linear-gradient(#2A2E33 20px, transparent 0), linear-gradient(90deg, #515151 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
   background-position: 14px;
   .screen-wrapper {
