@@ -492,7 +492,7 @@ export default {
     overflow: hidden;
     display: inline-block;
     .widget-wrapper {
-      position: absolute;
+      // position: absolute;
       display: inline-block;
       .widget {
         overflow: hidden;
