@@ -6,8 +6,8 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     // screen offset from canvas
-    SCREEN_LEFT: 20,
-    SCREEN_TOP: 20,
+    SCREEN_LEFT: 30,
+    SCREEN_TOP: 30,
     // 因为初始页面显示是自适应大小，所以zoom初始化必须是1
     // 以保证第一次缩放图表时能获得正确大小
     zoom: 1,

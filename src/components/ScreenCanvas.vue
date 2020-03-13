@@ -1,42 +1,44 @@
 <template>
   <div class="screen-canvas" ref="canvas">
-    <div class="screen"
-        ref="screen"
-        :style="{
-          width: `${width}px`,
-          height: `${height}px`,
-          transform: `translate3D(${screenLeft}px, ${screenTop}px, 0)`,
-          backgroundColor
-        }"
-        @mousedown="handleMouseDown"
-        @mouseup="handleMouseUp"
-        @mousemove="handleMouseMove">
-      <div v-for="(widget, id) in widgets"
-          :key="id"
-          class="widget-wrapper"
+    <ScrollView class="screen-wrapper">
+      <div class="screen"
+          ref="screen"
           :style="{
-            transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
-            zIndex: widget.index
-          }">
-        <div class="widget"
-            ref="widget"
+            width: `${width}px`,
+            height: `${height}px`,
+            margin: `${SCREEN_TOP}px ${SCREEN_LEFT}px`,
+            backgroundColor
+          }"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+          @mousemove="handleMouseMove">
+        <div v-for="(widget, id) in widgets"
+            :key="id"
+            class="widget-wrapper"
             :style="{
-              height: `${widget.height}px`,
-              width: `${widget.width}px`,
-              backgroundColor: widget.backgroundColor
+              transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
+              zIndex: widget.index
             }">
-        </div>
-        <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
-          <span class="cursor"
-                v-for="(cursor, index) in cursors"
-                :key="index"
-                :data-id="id"
-                :data-cursor="cursor.dr"
-                :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
-          </span>
+          <div class="widget"
+              ref="widget"
+              :style="{
+                height: `${widget.height}px`,
+                width: `${widget.width}px`,
+                backgroundColor: widget.backgroundColor
+              }">
+          </div>
+          <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
+            <span class="cursor"
+                  v-for="(cursor, index) in cursors"
+                  :key="index"
+                  :data-id="id"
+                  :data-cursor="cursor.dr"
+                  :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </ScrollView>
     <CanvasZoomer class="canvas-zoomer"></CanvasZoomer>
   </div>
 </template>
@@ -46,6 +48,7 @@ import { mapGetters, mapMutations } from 'vuex'
 import echarts from 'echarts'
 import Vue from 'vue'
 import { debounce } from '@/util/helpers'
+import ScrollView from './ScrollView.vue'
 import CanvasZoomer from './CanvasZoomer.vue'
 
 // todo
@@ -152,6 +155,7 @@ class Widget {
 
 export default {
   components: {
+    ScrollView,
     CanvasZoomer
   },
   data() {
@@ -471,16 +475,22 @@ export default {
 .screen-canvas {
   overflow: hidden;
   position: relative;
-  background: #20252b;
-  background-image: linear-gradient(#20252b 20px, transparent 0), linear-gradient(90deg, #5a5a5a 2px, transparent 0);
+  background: #2A2E33;
+  // 网络
+  // background-image: linear-gradient(90deg, rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%), linear-gradient(rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%);
+  // background-size: 15px 15px;
+  // 点阵
+  background-image: linear-gradient(#2A2E33 20px, transparent 0), linear-gradient(90deg, #666 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
-  background-position: 14px 12px;
+  background-position: 14px;
+  .screen-wrapper {
+    height: 100%;
+    width: 100%;
+  }
   .screen {
-    position: absolute;
-    left: 0;
-    top: 0;
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     overflow: hidden;
+    display: inline-block;
     .widget-wrapper {
       position: absolute;
       display: inline-block;
@@ -515,8 +525,8 @@ export default {
   }
   .canvas-zoomer {
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: 20px;
+    right: 20px;
   }
 }
 </style>
