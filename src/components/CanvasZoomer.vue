@@ -1,51 +1,32 @@
 <template>
-  <div class="canvas-zoomer" :style="{ width: `${zoomerWidth}px` }">
-    <div class="canvas-overview"
-        :style="{ height: `${zoomerHeight}px` }">
-      <div class="screen-overview"
-          :style="{ backgroundColor }">
-      </div>
-      <div class="drag-handle"
-          :style="{
-            width: `${zoomerHandleWidth}px`,
-            height: `${zoomerHandleHeight}px`,
-            transform: `translate3D(${transform[0]}px, ${transform[1]}px, 0)`
-          }"
-          @mousedown="handleMouseDown"
-          @mousemove="handleMouseMove"
-          @mouseup="handleMouseUp"
-          @mouseout="handleMouseUp">
-      </div>
-    </div>
-    <div class="zoom-options">
-      <span>画布缩放</span>
-      <CmSlider class="slider"
-                v-model="zoom"
-                :min="20"
-                :max="150"
-                suffix="%"
-                show-input>
-      </CmSlider>
-      <CmIconButton class="icon-button" icon="fullscreen" @click.native="handleSetProperZoomLevel"></CmIconButton>
-    </div>
+  <div class="canvas-zoomer"
+      :style="{
+        width: `${zoomerWidth}px`,
+        height: `${zoomerHeight}px`
+      }">
+    <div class="screen-overview"></div>
+    <!-- <div class="drag-handle"
+        :style="{
+          width: `${zoomerHandleWidth}px`,
+          height: `${zoomerHandleHeight}px`,
+          transform: `translate3D(${transform[0]}px, ${transform[1]}px, 0)`
+        }"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove"
+        @mouseup="handleMouseUp"
+        @mouseout="handleMouseUp">
+    </div>     -->
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
-import CmIconButton from './CmIconButton.vue'
-import CmSlider from './CmSlider.vue'
 
-const ZOOMER_WIDTH = 286
+const ZOOMER_WIDTH_BASE = 186, ZOOMER_HEIGHT_BASE = 150
 
 export default {
-  components: {
-    CmIconButton,
-    CmSlider
-  },
   data() {
     return {
-      zoomerWidth: ZOOMER_WIDTH,
       drag: false,
       transform: [0, 0],
       downpoint: [0, 0]
@@ -53,25 +34,28 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'canvasZoomLevel', 'canvasProperZoomLevel', 'screenWidth',
-      'screenHeight', 'backgroundColor'
+      'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasHeight',
+      'screenWidth', 'screenHeight', 'backgroundColor', 'SCREEN_TOP'
     ]),
-    zoom: {
-      get() {
-        // 显示一个整数而不是小数，但真实的zoomLevel可能不绝对等于显示的值
-        return Math.round(this.canvasZoomLevel * 100)
-      },
-      set(value) {
-        this.setCanvasZoom(value / 100)
+    zoomerWidth() {
+      if (this.screenWidth > this.screenHeight) {
+        return ZOOMER_WIDTH_BASE
       }
+      return this.zoomerHeight / this.screenHeight * this.screenWidth
     },
     zoomerHeight() {
+      if (this.screenHeight > this.screenWidth) {
+        return ZOOMER_HEIGHT_BASE
+      }
       return this.zoomerWidth / this.screenWidth * this.screenHeight
     },
     zoomerHandleWidth() {
       return this.zoomerWidth * this.displayRatio
     },
     zoomerHandleHeight() {
+      if (this.canvasZoomLevel * this.screenHeight + this.SCREEN_TOP * 2 <= this.canvasHeight) {
+        return this.zoomerHeight
+      }
       return this.zoomerHeight * this.displayRatio
     },
     zoomerHandleMaxY() {
@@ -97,9 +81,6 @@ export default {
   },
   methods: {
     ...mapMutations(['setCanvasZoom', 'setZoomerTransform']),
-    handleSetProperZoomLevel() {
-      this.setCanvasZoom(this.canvasProperZoomLevel)
-    },
     handleMouseDown(e) {
       e.preventDefault()
       if (this.displayRatio === 1) {
@@ -133,37 +114,23 @@ export default {
 .canvas-zoomer {
   background-color: #14181c;
   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
-  .canvas-overview {
-    position: relative;
-    padding: 3%;
-    overflow: hidden;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 5px;
+  .screen-overview {
+    height: 100%;
+    width: 100%;
+    border: 1px solid #324c5b;
     box-sizing: border-box;
-    .screen-overview {
-      height: 100%;
-      width: 100%;
-    }
-    .drag-handle {
-      position: absolute;
-      left: 0;
-      top: 0;
-      border: 1px solid lighten($theme-color, 10%);
-      box-shadow: 10px 8px 15px rgba(0, 0, 0, .2);
-      box-sizing: border-box;
-      cursor: move;
-    }
   }
-  .zoom-options {
-    height: 45px;
-    background-color: #282D33;
+  .drag-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 1px solid lighten($theme-color, 10%);
+    box-shadow: 10px 8px 15px rgba(0, 0, 0, .2);
     box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // padding: 0 5px;
-    .slider {
-      flex: 0 0 180px;
-      margin-right: 5px;
-    }
+    cursor: move;
   }
 }
 </style>

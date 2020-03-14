@@ -235,7 +235,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoom', 'setProperZoomLevel']),
+    ...mapMutations(['setCanvasZoom', 'setCanvasHeight', 'setProperZoomLevel']),
     getScreenRect() {
       // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()
@@ -438,12 +438,21 @@ export default {
     },
     getProperZoomLevel() {
       const canvasStyle = getComputedStyle(this.$refs.canvas, null),
-            width = parseFloat(canvasStyle.width),
-            displayScreenWidth = width - this.SCREEN_LEFT * 2,
-            zoomLevel = displayScreenWidth / this.screenWidth
+            height = parseFloat(canvasStyle.height),
+            width = parseFloat(canvasStyle.width)
+      let zoomLevel = 1
+      if (this.screenWidth > this.screenHeight) {
+        const displayScreenWidth = width - this.SCREEN_LEFT * 2
+        zoomLevel = displayScreenWidth / this.screenWidth
+      } else {
+        const displayScreenHeight = height - this.SCREEN_TOP * 2
+        zoomLevel = displayScreenHeight / this.screenHeight
+      }
       this.setCanvasZoom(zoomLevel)
       // 保存一份自适应大小时的zoomlevel
       this.setProperZoomLevel(zoomLevel)
+      // 保存时此容器的高度
+      this.setCanvasHeight(height)
     }
   },
   mounted() {
@@ -473,7 +482,6 @@ export default {
 @import "../scss/vars.scss";
 
 .screen-canvas {
-  overflow: hidden;
   position: relative;
   background: #2A2E33;
   // 网络
@@ -491,6 +499,7 @@ export default {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     overflow: hidden;
     display: inline-block;
+    vertical-align: top;
     .widget-wrapper {
       // position: absolute;
       display: inline-block;
