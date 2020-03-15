@@ -235,7 +235,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoom', 'setCanvasHeight', 'setProperZoomLevel']),
+    ...mapMutations(['setCanvasZoom', 'setCanvasWidth', 'setCanvasHeight', 'setProperZoomLevel']),
     getScreenRect() {
       // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()
@@ -451,7 +451,8 @@ export default {
       this.setCanvasZoom(zoomLevel)
       // 保存一份自适应大小时的zoomlevel
       this.setProperZoomLevel(zoomLevel)
-      // 保存时此容器的高度
+      // 保存容器的长宽
+      this.setCanvasWidth(width)
       this.setCanvasHeight(height)
     }
   },

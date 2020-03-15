@@ -4,8 +4,14 @@
         width: `${zoomerWidth}px`,
         height: `${zoomerHeight}px`
       }">
-    <div class="screen-overview"></div>
-    <!-- <div class="drag-handle"
+    <div class="screen-overview"
+        :style="{
+          width: `${overviewWidth}px`,
+          height: `${overviewHeight}px`,
+          margin: `${overviewTop}px 0 0 ${overviewLeft}px`,
+          backgroundColor
+        }"></div>
+    <div class="drag-handle"
         :style="{
           width: `${zoomerHandleWidth}px`,
           height: `${zoomerHandleHeight}px`,
@@ -15,18 +21,17 @@
         @mousemove="handleMouseMove"
         @mouseup="handleMouseUp"
         @mouseout="handleMouseUp">
-    </div>     -->
+    </div>    
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
 
-const ZOOMER_WIDTH_BASE = 186, ZOOMER_HEIGHT_BASE = 150
-
 export default {
   data() {
     return {
+      zoomerWidth: 156, 
       drag: false,
       transform: [0, 0],
       downpoint: [0, 0]
@@ -34,29 +39,31 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasHeight',
-      'screenWidth', 'screenHeight', 'backgroundColor', 'SCREEN_TOP'
+      'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasWidth', 'canvasHeight',
+      'screenWidth', 'screenHeight', 'backgroundColor', 'SCREEN_LEFT', 'SCREEN_TOP'
     ]),
-    zoomerWidth() {
-      if (this.screenWidth > this.screenHeight) {
-        return ZOOMER_WIDTH_BASE
-      }
-      return this.zoomerHeight / this.screenHeight * this.screenWidth
-    },
     zoomerHeight() {
-      if (this.screenHeight > this.screenWidth) {
-        return ZOOMER_HEIGHT_BASE
-      }
-      return this.zoomerWidth / this.screenWidth * this.screenHeight
+      return this.zoomerWidth / this.canvasWidth * this.canvasHeight
+    },
+    overviewWidth() {
+      return this.canvasProperZoomLevel * this.screenWidth / this.canvasWidth * this.zoomerWidth
+    },
+    overviewHeight() {
+      return this.canvasProperZoomLevel * this.screenHeight / this.canvasHeight * this.zoomerHeight
+    },
+    overviewTop() {
+      return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
+    },
+    overviewLeft() {
+      return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
     },
     zoomerHandleWidth() {
-      return this.zoomerWidth * this.displayRatio
+      const displayWidthRatio = Math.min(1, this.canvasWidth / (this.screenWidth * this.canvasZoomLevel + this.SCREEN_LEFT * 2))
+      return this.zoomerWidth * displayWidthRatio
     },
     zoomerHandleHeight() {
-      if (this.canvasZoomLevel * this.screenHeight + this.SCREEN_TOP * 2 <= this.canvasHeight) {
-        return this.zoomerHeight
-      }
-      return this.zoomerHeight * this.displayRatio
+      const displayHeightRatio = Math.min(1, this.canvasHeight / (this.screenHeight * this.canvasZoomLevel + this.SCREEN_TOP * 2))
+      return this.zoomerHeight * displayHeightRatio
     },
     zoomerHandleMaxY() {
       return this.zoomerHeight - this.zoomerHandleHeight
@@ -116,19 +123,12 @@ export default {
   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
   overflow: hidden;
   box-sizing: border-box;
-  padding: 5px;
-  .screen-overview {
-    height: 100%;
-    width: 100%;
-    border: 1px solid #324c5b;
-    box-sizing: border-box;
-  }
+  .screen-overview {}
   .drag-handle {
     position: absolute;
     left: 0;
     top: 0;
     border: 1px solid lighten($theme-color, 10%);
-    box-shadow: 10px 8px 15px rgba(0, 0, 0, .2);
     box-sizing: border-box;
     cursor: move;
   }

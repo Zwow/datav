@@ -11,7 +11,8 @@ export default new Vuex.Store({
     // 因为初始页面显示是自适应大小，所以zoom初始化必须是1
     // 以保证第一次缩放图表时能获得正确大小
     zoom: 1,
-    canvasHeight: 1080,
+    canvasWidth: 0,
+    canvasHeight: 0,
     zoomerTransform: [0, 0],
     // 自适应大小时的缩放值
     properZoomLevel: 1,
@@ -23,6 +24,7 @@ export default new Vuex.Store({
     SCREEN_LEFT: ({ SCREEN_LEFT }) => SCREEN_LEFT,
     SCREEN_TOP: ({ SCREEN_TOP }) => SCREEN_TOP,
     canvasZoomLevel: ({ zoom }) => zoom,
+    canvasWidth: ({ canvasWidth }) => canvasWidth,
     canvasHeight: ({ canvasHeight }) => canvasHeight,
     canvasProperZoomLevel: ({ properZoomLevel }) => properZoomLevel,
     screenHeight: ({ screenHeight }) => screenHeight,
@@ -33,6 +35,9 @@ export default new Vuex.Store({
   mutations: {
     setCanvasZoom(state, value) {
       state.zoom = Math.min(Math.max(value, .2), 1.5)
+    },
+    setCanvasWidth(state, value) {
+      state.canvasWidth = value
     },
     setCanvasHeight(state, value) {
       state.canvasHeight = value
