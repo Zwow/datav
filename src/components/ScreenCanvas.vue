@@ -230,7 +230,6 @@ export default {
   },
   watch: {
     canvasZoomLevel(nv, old) {
-      console.log('zoom diff: ', (nv - old) / old)
       this.scaleWidgets((nv - old) / old)
     }
   },

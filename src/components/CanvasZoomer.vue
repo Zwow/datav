@@ -43,27 +43,41 @@ export default {
       'screenWidth', 'screenHeight', 'backgroundColor', 'SCREEN_LEFT', 'SCREEN_TOP'
     ]),
     zoomerHeight() {
-      return this.zoomerWidth / this.canvasWidth * this.canvasHeight
+      if (this.displayWidthRatio > 1) {
+        return this.zoomerWidth / this.canvasWidth * this.canvasHeight
+      }
+      return this.zoomerWidth / this.screenWidth * this.screenHeight
+    },
+    displayWidthRatio() {
+      return this.canvasWidth / (this.screenWidth * this.canvasZoomLevel + this.SCREEN_LEFT * 2)
+    },
+    displayHeightRatio() {
+      return this.canvasHeight / (this.screenHeight * this.canvasZoomLevel + this.SCREEN_TOP * 2)
     },
     overviewWidth() {
-      return this.canvasProperZoomLevel * this.screenWidth / this.canvasWidth * this.zoomerWidth
+      return this.zoomerWidth / Math.max(this.displayWidthRatio, 1) - this.overviewLeft * 2
     },
     overviewHeight() {
-      return this.canvasProperZoomLevel * this.screenHeight / this.canvasHeight * this.zoomerHeight
+      return this.zoomerHeight / Math.max(this.displayHeightRatio, 1) - this.overviewTop * 2
     },
     overviewTop() {
-      return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
+      // return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
+      if (this.displayHeightRatio > 1) {
+        return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
+      }
+      return this.SCREEN_TOP / (this.screenHeight * this.canvasProperZoomLevel + 2 * this.SCREEN_TOP) * this.zoomerHeight
     },
     overviewLeft() {
-      return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
+      if (this.displayWidthRatio > 1) {
+        return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
+      }
+      return this.SCREEN_LEFT / (this.screenWidth * this.canvasProperZoomLevel + 2 * this.SCREEN_LEFT) * this.zoomerWidth
     },
     zoomerHandleWidth() {
-      const displayWidthRatio = Math.min(1, this.canvasWidth / (this.screenWidth * this.canvasZoomLevel + this.SCREEN_LEFT * 2))
-      return this.zoomerWidth * displayWidthRatio
+      return this.zoomerWidth * Math.min(this.displayWidthRatio, 1)
     },
     zoomerHandleHeight() {
-      const displayHeightRatio = Math.min(1, this.canvasHeight / (this.screenHeight * this.canvasZoomLevel + this.SCREEN_TOP * 2))
-      return this.zoomerHeight * displayHeightRatio
+      return this.zoomerHeight * Math.min(this.displayHeightRatio, 1)
     },
     zoomerHandleMaxY() {
       return this.zoomerHeight - this.zoomerHandleHeight
