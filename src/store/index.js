@@ -18,6 +18,8 @@ export default new Vuex.Store({
     canvasProperZoomLevel: 1,
     screenHeight: 1080,
     screenWidth: 1920,
+    widgets: [],
+    selectedWidgets: [],
     backgroundColor: '#313b44'
   },
   getters: {

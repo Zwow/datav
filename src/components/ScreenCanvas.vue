@@ -522,7 +522,7 @@ export default {
         width: 100%;
         box-sizing: border-box;
         &.active {
-          border: 1px dashed purple;
+          border: 1px solid $theme-color;
           .cursor {
             display: inline-block;
           }

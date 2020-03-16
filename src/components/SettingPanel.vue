@@ -25,6 +25,7 @@
             <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
           </div>
         </div>
+        <DvButton @on-click="handleClick">保存</DvButton>
       </template>
     </ScrollView>
   </div>
@@ -82,6 +83,9 @@ export default {
     ...mapMutations(['setScreenWidth', 'setScreenHeight', 'setBackgroundColor']),
     handleChange(v) {
       console.log(v)
+    },
+    handleClick() {
+      console.log('###', this.backgroundColor)
     }
   }
 }
