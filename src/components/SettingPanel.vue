@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapState, mapGetters, mapMutations } from 'vuex'
 import ScrollView from './ScrollView.vue'
 import CmInputNumber from './CmInputNumber.vue'
 import CmColorPicker from './CmColorPicker.vue'
@@ -50,7 +50,7 @@ export default {
     CmInput
   },
   computed: {
-    ...mapGetters(['screenHeight', 'screenWidth', 'backgroundColor']),
+    ...mapState(['screenHeight', 'screenWidth', 'backgroundColor']),
     width: {
       get() {
         return this.screenWidth

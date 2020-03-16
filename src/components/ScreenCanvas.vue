@@ -1,40 +1,46 @@
 <template>
   <div class="screen-canvas" ref="canvas">
-    <ScrollView class="screen-wrapper">
-      <div class="screen"
-          ref="screen"
+    <ScrollView class="canvas-scroll-view" :scroll="canvasScroll">
+      <div class="screen-wrapper"
           :style="{
-            width: `${width}px`,
-            height: `${height}px`,
-            margin: `${SCREEN_TOP}px ${SCREEN_LEFT}px`,
-            backgroundColor
-          }"
-          @mousedown="handleMouseDown"
-          @mouseup="handleMouseUp"
-          @mousemove="handleMouseMove">
-        <div v-for="(widget, id) in widgets"
-            :key="id"
-            class="widget-wrapper"
+            width: `${screenWrapperWidth}px`,
+            height: `${screenWrapperHeight}px`,
+            padding: `${SCREEN_TOP}px ${SCREEN_LEFT}px`,
+          }">
+        <div class="screen"
+            ref="screen"
             :style="{
-              transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
-              zIndex: widget.index
-            }">
-          <div class="widget"
-              ref="widget"
+              width: `${displayScreenWidth}px`,
+              height: `${displayScreenHeight}px`,
+              backgroundColor
+            }"
+            @mousedown="handleMouseDown"
+            @mouseup="handleMouseUp"
+            @mousemove="handleMouseMove">
+          <div v-for="(widget, id) in widgets"
+              :key="id"
+              class="widget-wrapper"
               :style="{
-                height: `${widget.height}px`,
-                width: `${widget.width}px`,
-                backgroundColor: widget.backgroundColor
+                transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
+                zIndex: widget.index
               }">
-          </div>
-          <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
-            <span class="cursor"
-                  v-for="(cursor, index) in cursors"
-                  :key="index"
-                  :data-id="id"
-                  :data-cursor="cursor.dr"
-                  :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
-            </span>
+            <div class="widget"
+                ref="widget"
+                :style="{
+                  height: `${widget.height}px`,
+                  width: `${widget.width}px`,
+                  backgroundColor: widget.backgroundColor
+                }">
+            </div>
+            <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
+              <span class="cursor"
+                    v-for="(cursor, index) in cursors"
+                    :key="index"
+                    :data-id="id"
+                    :data-cursor="cursor.dr"
+                    :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -44,7 +50,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapState, mapGetters, mapMutations } from 'vuex'
 import echarts from 'echarts'
 import Vue from 'vue'
 import { debounce } from '@/util/helpers'
@@ -210,23 +216,15 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'SCREEN_LEFT', 'SCREEN_TOP', 'canvasZoomLevel',
+    ...mapState([
+      'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
-      'zoomerTransform'
+      'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
     ]),
-    height() {
-      return this.canvasZoomLevel * this.screenHeight
-    },
-    width() {
-      return this.canvasZoomLevel * this.screenWidth
-    },
-    screenLeft() {
-      return this.SCREEN_LEFT - this.width * this.zoomerTransform[0]
-    },
-    screenTop() {
-      return this.SCREEN_TOP - this.width * this.zoomerTransform[1]
-    },
+    ...mapGetters([
+      'displayScreenWidth', 'displayScreenHeight',
+      'screenWrapperWidth', 'screenWrapperHeight'
+    ])
   },
   watch: {
     canvasZoomLevel(nv, old) {
@@ -234,7 +232,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoom', 'setCanvasWidth', 'setCanvasHeight', 'setProperZoomLevel']),
+    ...mapMutations(['setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight', 'setProperZoomLevel']),
     getScreenRect() {
       // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()
@@ -447,7 +445,7 @@ export default {
         const displayScreenHeight = height - this.SCREEN_TOP * 2
         zoomLevel = displayScreenHeight / this.screenHeight
       }
-      this.setCanvasZoom(zoomLevel)
+      this.setCanvasZoomLevel(zoomLevel)
       // 保存一份自适应大小时的zoomlevel
       this.setProperZoomLevel(zoomLevel)
       // 保存容器的长宽
@@ -491,18 +489,20 @@ export default {
   background-image: linear-gradient(#2A2E33 20px, transparent 0), linear-gradient(90deg, #515151 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
   background-position: 14px;
-  .screen-wrapper {
+  .canvas-scroll-view {
     height: 100%;
     width: 100%;
+  }
+  .screen-wrapper {
+    display: inline-block;
+    vertical-align: top;
   }
   .screen {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     overflow: hidden;
-    display: inline-block;
-    vertical-align: top;
     .widget-wrapper {
-      // position: absolute;
       display: inline-block;
+      vertical-align: top;
       .widget {
         overflow: hidden;
       }

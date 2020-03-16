@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapState, mapGetters, mapMutations } from 'vuex'
 import CmIconButton from './CmIconButton.vue'
 import CmSlider from './CmSlider.vue'
 
@@ -25,21 +25,22 @@ export default {
     CmSlider
   },
   computed: {
-    ...mapGetters(['canvasZoomLevel', 'canvasProperZoomLevel']),
+    ...mapState(['canvasZoomLevel']),
+    ...mapGetters(['canvasProperZoomLevel']),
     zoom: {
       get() {
         // 显示一个整数而不是小数，但真实的zoomLevel可能不绝对等于显示的值
         return Math.round(this.canvasZoomLevel * 100)
       },
       set(value) {
-        this.setCanvasZoom(value / 100)
+        this.setCanvasZoomLevel(value / 100)
       }
     },
   },
   methods: {
-    ...mapMutations(['setCanvasZoom']),
+    ...mapMutations(['setCanvasZoomLevel']),
     handleSetProperZoomLevel() {
-      this.setCanvasZoom(this.canvasProperZoomLevel)
+      this.setCanvasZoomLevel(this.canvasProperZoomLevel)
     },
   }
 }

@@ -12,11 +12,23 @@ export default {
   props: {
     options: {
       type: Object
+    },
+    scroll: {
+      type: Array
     }
   },
   data() {
     return {
       scrollbar: null
+    }
+  },
+  watch: {
+    scroll: {
+      handler(nv) {
+        this.$refs.scrollbar.scrollLeft = nv[0]
+        this.$refs.scrollbar.scrollTop = nv[1]
+      },
+      deep: true
     }
   },
   mounted() {

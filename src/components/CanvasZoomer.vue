@@ -10,7 +10,8 @@
           height: `${overviewHeight}px`,
           margin: `${overviewTop}px 0 0 ${overviewLeft}px`,
           backgroundColor
-        }"></div>
+        }">
+    </div>
     <div class="drag-handle"
         :style="{
           width: `${zoomerHandleWidth}px`,
@@ -26,7 +27,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapState, mapGetters, mapMutations } from 'vuex'
 
 export default {
   data() {
@@ -38,75 +39,44 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasWidth', 'canvasHeight',
-      'screenWidth', 'screenHeight', 'backgroundColor', 'SCREEN_LEFT', 'SCREEN_TOP'
+    ...mapState([
+      'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
+      'canvasZoomLevel', 'canvasProperZoomLevel', 'screenWidth', 'screenHeight',
+      'backgroundColor'
     ]),
+    ...mapGetters(['screenWrapperWidth', 'screenWrapperHeight']),
     zoomerHeight() {
-      if (this.displayWidthRatio > 1) {
-        return this.zoomerWidth / this.canvasWidth * this.canvasHeight
-      }
-      return this.zoomerWidth / this.screenWidth * this.screenHeight
-    },
-    displayWidthRatio() {
-      return this.canvasWidth / (this.screenWidth * this.canvasZoomLevel + this.SCREEN_LEFT * 2)
-    },
-    displayHeightRatio() {
-      return this.canvasHeight / (this.screenHeight * this.canvasZoomLevel + this.SCREEN_TOP * 2)
+      return this.zoomerWidth / this.canvasWidth * this.canvasHeight
     },
     overviewWidth() {
-      return this.zoomerWidth / Math.max(this.displayWidthRatio, 1) - this.overviewLeft * 2
+      return this.canvasProperZoomLevel * this.screenWidth / this.canvasWidth * this.zoomerWidth
     },
     overviewHeight() {
-      return this.zoomerHeight / Math.max(this.displayHeightRatio, 1) - this.overviewTop * 2
+      return this.canvasProperZoomLevel * this.screenHeight / this.canvasHeight * this.zoomerHeight
     },
     overviewTop() {
-      // return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
-      if (this.displayHeightRatio > 1) {
-        return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
-      }
-      return this.SCREEN_TOP / (this.screenHeight * this.canvasProperZoomLevel + 2 * this.SCREEN_TOP) * this.zoomerHeight
+      return this.SCREEN_TOP / this.canvasHeight * this.zoomerHeight
     },
     overviewLeft() {
-      if (this.displayWidthRatio > 1) {
-        return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
-      }
-      return this.SCREEN_LEFT / (this.screenWidth * this.canvasProperZoomLevel + 2 * this.SCREEN_LEFT) * this.zoomerWidth
+      return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
     },
     zoomerHandleWidth() {
-      return this.zoomerWidth * Math.min(this.displayWidthRatio, 1)
+      return Math.min(this.canvasWidth / (this.screenWrapperWidth + 2 * this.SCREEN_LEFT), 1) * this.zoomerWidth
     },
     zoomerHandleHeight() {
-      return this.zoomerHeight * Math.min(this.displayHeightRatio, 1)
+      return Math.min(this.canvasHeight / (this.screenWrapperHeight + 2 * this.SCREEN_TOP), 1) * this.zoomerHeight
     },
     zoomerHandleMaxY() {
       return this.zoomerHeight - this.zoomerHandleHeight
     },
     zoomerHandleMaxX() {
       return this.zoomerWidth - this.zoomerHandleWidth
-    },
-    ratio() {
-      return this.canvasProperZoomLevel / this.canvasZoomLevel
-    },
-    displayRatio() {
-      return Math.min(1, this.ratio)
     }
   },
-  watch: {
-    // zoomerHandleWidth(nv, old) {
-    //   this.$set(this.transform, 0, this.transform[0] - nv + old)
-    // },
-    // zoomerHandleHeight(nv, old) {
-    //   this.$set(this.transform, 1, this.transform[1] - nv + old)
-    // }
-  },
   methods: {
-    ...mapMutations(['setCanvasZoom', 'setZoomerTransform']),
+    ...mapMutations(['setCanvasZoomLevel', 'setCanvasScroll']),
     handleMouseDown(e) {
       e.preventDefault()
-      if (this.displayRatio === 1) {
-        return
-      }
       this.downpoint = [e.offsetX, e.offsetY]
       this.drag = true
     },
@@ -116,9 +86,9 @@ export default {
           Math.min(Math.max(0, this.transform[0] + e.offsetX - this.downpoint[0]), this.zoomerHandleMaxX),
           Math.min(Math.max(0, this.transform[1] + e.offsetY - this.downpoint[1]), this.zoomerHandleMaxY),
         ]
-        this.setZoomerTransform([
-          this.transform[0] / this.zoomerWidth,
-          this.transform[1] / this.zoomerHeight
+        this.setCanvasScroll([
+          this.transform[0] / this.zoomerWidth * (this.screenWrapperWidth + 2 * this.SCREEN_LEFT),
+          this.transform[1] / this.zoomerHeight * (this.screenWrapperHeight + 2 * this.SCREEN_TOP)
         ])
       }
     },
