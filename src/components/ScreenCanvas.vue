@@ -1,6 +1,8 @@
 <template>
   <div class="screen-canvas" ref="canvas">
-    <ScrollView class="canvas-scroll-view" :scroll="canvasScroll">
+    <ScrollView class="canvas-scroll-view"
+              :scroll="canvasScroll"
+              @on-scroll="handleScroll">
       <div class="screen-wrapper"
           :style="{
             width: `${screenWrapperWidth}px`,
@@ -232,7 +234,13 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight', 'setProperZoomLevel']),
+    ...mapMutations([
+      'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
+      'setProperZoomLevel', 'setCanvasScroll'
+    ]),
+    handleScroll({ scrollLeft, scrollTop }) {
+      this.setCanvasScroll([scrollLeft, scrollTop])
+    },
     getScreenRect() {
       // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()

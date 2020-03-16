@@ -42,7 +42,7 @@ export default {
     ...mapState([
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'screenWidth', 'screenHeight',
-      'backgroundColor'
+      'backgroundColor', 'canvasScroll'
     ]),
     ...mapGetters(['screenWrapperWidth', 'screenWrapperHeight']),
     zoomerHeight() {
@@ -60,17 +60,37 @@ export default {
     overviewLeft() {
       return this.SCREEN_LEFT / this.canvasWidth * this.zoomerWidth
     },
+    screenBoxWidth() {
+      return this.screenWrapperWidth + 2 * this.SCREEN_LEFT
+    },
+    screenBoxHeight() {
+      return this.screenWrapperHeight + 2 * this.SCREEN_TOP
+    },
     zoomerHandleWidth() {
-      return Math.min(this.canvasWidth / (this.screenWrapperWidth + 2 * this.SCREEN_LEFT), 1) * this.zoomerWidth
+      return Math.min(this.canvasWidth / this.screenBoxWidth, 1) * this.zoomerWidth
     },
     zoomerHandleHeight() {
-      return Math.min(this.canvasHeight / (this.screenWrapperHeight + 2 * this.SCREEN_TOP), 1) * this.zoomerHeight
+      return Math.min(this.canvasHeight / this.screenBoxHeight, 1) * this.zoomerHeight
     },
     zoomerHandleMaxY() {
       return this.zoomerHeight - this.zoomerHandleHeight
     },
     zoomerHandleMaxX() {
       return this.zoomerWidth - this.zoomerHandleWidth
+    }
+  },
+  watch: {
+    canvasProperZoomLevel() {
+      this.transform = [0, 0]
+    },
+    canvasScroll: {
+      handler(nv) {
+        this.transform = [
+          nv[0] / this.screenBoxWidth * this.zoomerWidth,
+          nv[1] / this.screenBoxHeight * this.zoomerHeight,
+        ]
+      },
+      deep: true
     }
   },
   methods: {
@@ -87,8 +107,8 @@ export default {
           Math.min(Math.max(0, this.transform[1] + e.offsetY - this.downpoint[1]), this.zoomerHandleMaxY),
         ]
         this.setCanvasScroll([
-          this.transform[0] / this.zoomerWidth * (this.screenWrapperWidth + 2 * this.SCREEN_LEFT),
-          this.transform[1] / this.zoomerHeight * (this.screenWrapperHeight + 2 * this.SCREEN_TOP)
+          this.transform[0] / this.zoomerWidth * this.screenBoxWidth,
+          this.transform[1] / this.zoomerHeight * this.screenWrapperHeight
         ])
       }
     },

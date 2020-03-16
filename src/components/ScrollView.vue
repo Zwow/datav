@@ -31,8 +31,19 @@ export default {
       deep: true
     }
   },
+  methods: {
+    scrollHandler() {
+      this.$emit('on-scroll', { scrollLeft: this.$refs.scrollbar.scrollLeft, scrollTop: this.$refs.scrollbar.scrollTop })
+    }
+  },
   mounted() {
     this.scrollbar = new PerfectScrollbar(this.$refs.scrollbar, this.options)
+    this.$refs.scrollbar.addEventListener('ps-scroll-x', this.scrollHandler)
+    this.$refs.scrollbar.addEventListener('ps-scroll-y', this.scrollHandler)
+  },
+  beforeDestroy() {
+    this.$refs.scrollbar.removeEventListener('ps-scroll-x', this.scrollHandler)
+    this.$refs.scrollbar.removeEventListener('ps-scroll-y', this.scrollHandler)
   },
   updated() {
     this.$nextTick(() => {
