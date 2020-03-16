@@ -127,7 +127,6 @@ export default {
   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
   overflow: hidden;
   box-sizing: border-box;
-  .screen-overview {}
   .drag-handle {
     position: absolute;
     left: 0;

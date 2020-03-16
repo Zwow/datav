@@ -59,6 +59,26 @@ export default new Vuex.Store({
     },
     setBackgroundColor(state, value) {
       state.backgroundColor = value
+    },
+    addWidgets(state, widget) {
+      if (Array.isArray(widget)) {
+        state.widgets.push(...widget)
+      } else {
+        state.widgets.push(widget)
+      }
+    },
+    removeWidget(state, index) {
+      if (Array.isArray(index)) {
+        state.widgets = state.widgets.filter((e, id) => this.selectedWidget.indexOf(id) === -1)
+      } else {
+        state.widgets.splice(index, 1)
+      }
+    },
+    editWidget(state, { index, payload }) {
+      Object.keys(payload).forEach((k) => {
+        Vue.set(state.widgets[index], k, payload[k])
+      })
+      console.log('#$', state.widgets[index])
     }
   }
 })

@@ -175,7 +175,7 @@ export default {
       mode: null,
       offsets: [0, 0],
       cursor: 'n',
-      widgets: [],
+      // widgets: [],
       // containter left corner to page left corner, [left, top]
       // update when this component mounted
       // get it by screenRect[mapping.index]
@@ -219,6 +219,7 @@ export default {
   },
   computed: {
     ...mapState([
+      'widgets',
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
@@ -235,6 +236,7 @@ export default {
   },
   methods: {
     ...mapMutations([
+      'addWidgets', 'removeWidgets', 'editWidget',
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll'
     ]),
@@ -296,11 +298,17 @@ export default {
       })
     },
     handleDelete() {
-      this.widgets = this.widgets.filter((e, id) => this.selectedWidget.indexOf(id) === -1)
+      // this.widgets = this.widgets.filter((e, id) => this.selectedWidget.indexOf(id) === -1)
+      this.removeWidgets(this.selectedWidget)
       this.selectedWidget = []
     },
     handleNewWidget() {
-      this.widgets.push(new Widget({
+      // this.widgets.push(new Widget({
+      //   width: 100,
+      //   height: 100,
+      //   backgroundColor: '#CCCCCC'
+      // }))
+      this.addWidgets(new Widget({
         width: 100,
         height: 100,
         backgroundColor: '#CCCCCC'
@@ -326,7 +334,8 @@ export default {
             type: 'bar'
           }]
         })
-        this.$set(this.widgets[this.selectedWidget[0]], 'chart', chart)
+        // this.$set(this.widgets[this.selectedWidget[0]], 'chart', chart)
+        this.editWidget({ index: this.selectedWidget[0], payload: { chart } })
       })
     },
     // drag = down + move + up
@@ -393,7 +402,8 @@ export default {
         this.selectedWidget.forEach((index) => {
           const { transform } = this.widgets[index]
           const offsets = [refPoint[0] - transform[0], refPoint[1] - transform[1]]
-          this.widgets[index].transform = [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]]
+          // this.widgets[index].transform = [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]]
+          this.editWidget({ index, payload: { transform: [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]] } })
         })
         return
       }
@@ -432,10 +442,18 @@ export default {
     keyupHandler() {
     },
     scaleWidgets(diff) {
-      this.widgets.forEach(widget => {
-        this.$set(widget, 'height', widget.height * (1 + diff))
-        this.$set(widget, 'width', widget.width * (1 + diff))
-        this.$set(widget, 'transform', widget.transform.map((e) => e * (1 + diff)))
+      this.widgets.forEach((widget, index) => {
+        // this.$set(widget, 'height', widget.height * (1 + diff))
+        // this.$set(widget, 'width', widget.width * (1 + diff))
+        // this.$set(widget, 'transform', widget.transform.map((e) => e * (1 + diff)))
+        this.editWidget({
+          index,
+          payload: {
+            height: widget.height * (1 + diff),
+            width: widget.width * (1 + diff),
+            transform: widget.transform.map((e) => e * (1 + diff))
+          }
+        })
         this.$nextTick(() => {
           widget.chart && widget.chart.resize()
         })
