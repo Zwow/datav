@@ -2,31 +2,30 @@
   <div class="screen-canvas-footer">
     <div class="zoom-options">
       <span>画布缩放</span>
-      <CmSlider class="slider"
+      <DvSlider class="slider"
                 v-model="zoom"
                 :min="20"
                 :max="150"
                 suffix="%"
                 show-input>
-      </CmSlider>
-      <CmIconButton class="icon-button" icon="fullscreen" @click.native="handleSetProperZoomLevel"></CmIconButton>
+      </DvSlider>
+      <DvIconButton class="icon-button" icon="fullscreen" @click.native="handleSetProperZoomLevel"></DvIconButton>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapMutations } from 'vuex'
-import CmIconButton from './CmIconButton.vue'
-import CmSlider from './CmSlider.vue'
+import DvIconButton from './DvIconButton.vue'
+import DvSlider from './DvSlider.vue'
 
 export default {
   components: {
-    CmIconButton,
-    CmSlider
+    DvIconButton,
+    DvSlider
   },
   computed: {
-    ...mapState(['canvasZoomLevel']),
-    ...mapGetters(['canvasProperZoomLevel']),
+    ...mapState(['canvasZoomLevel', 'canvasProperZoomLevel']),
     zoom: {
       get() {
         // 显示一个整数而不是小数，但真实的zoomLevel可能不绝对等于显示的值

@@ -9,20 +9,20 @@
           <label>屏幕尺寸</label>
           <div class="content">
             <!-- 最小300x300，最大暂定8K分辨率 -->
-            宽<CmInputNumber class="size-input" :precise="0" :min="300" :max="7680" v-model="width"></CmInputNumber>
-            高<CmInputNumber class="size-input" :precise="0" :min="300" :max="4320" v-model="height"></CmInputNumber>
+            宽<DvInputNumber class="size-input" :precise="0" :min="300" :max="7680" v-model="width"></DvInputNumber>
+            高<DvInputNumber class="size-input" :precise="0" :min="300" :max="4320" v-model="height"></DvInputNumber>
           </div>
         </div>
         <div class="setting-row">
           <label>背景颜色</label>
           <div class="content">
-            <CmColorPicker v-model="background" @on-change="handleChange"></CmColorPicker><br/>
+            <DvColorPicker v-model="background" @on-change="handleChange"></DvColorPicker><br/>
           </div>
         </div>
         <div class="setting-row">
           <label>背景图</label>
           <div class="content">
-            <CmInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></CmInput>
+            <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
           </div>
         </div>
       </template>
@@ -33,9 +33,10 @@
 <script>
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import ScrollView from './ScrollView.vue'
-import CmInputNumber from './CmInputNumber.vue'
-import CmColorPicker from './CmColorPicker.vue'
-import CmInput from './CmInput.vue'
+import DvInputNumber from './DvInputNumber.vue'
+import DvColorPicker from './DvColorPicker.vue'
+import DvInput from './DvInput.vue'
+import DvButton from './DvButton.vue'
 
 export default {
   data() {
@@ -45,9 +46,10 @@ export default {
   },
   components: {
     ScrollView,
-    CmInputNumber,
-    CmColorPicker,
-    CmInput
+    DvInputNumber,
+    DvColorPicker,
+    DvInput,
+    DvButton
   },
   computed: {
     ...mapState(['screenHeight', 'screenWidth', 'backgroundColor']),

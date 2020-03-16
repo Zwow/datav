@@ -1,5 +1,5 @@
 <template>
-  <button :class="`cm-button ${size}`">
+  <button :class="`cm-button ${size}`" @click="handleClick">
     <i :class="`iconfont icon-${icon}`" v-if="icon"></i><slot></slot>
   </button>
 </template>
@@ -14,6 +14,11 @@ export default {
       type: String,
       default: 'normal',
       validator: v => ['large', 'normal', 'small'].indexOf(v) !== -1
+    }
+  },
+  methods: {
+    handleClick(e) {
+      this.$emit('on-click', e)
     }
   }
 }
@@ -33,6 +38,9 @@ export default {
   .iconfont {
     margin-right: 10px;
   }
+  &:hover {
+    background-color: lighten($theme-color, 2);
+  }
   &.normal {
     padding: $button-padding-base;
   }
@@ -45,6 +53,7 @@ export default {
     }
   }
   &:active {
+    background-color: darken($theme-color, 1);
   }
 }
 </style>

@@ -1,13 +1,13 @@
 <template>
   <div class="cm-input-number-wrapper">
     <div class="cm-input-number" :class="{ 'input-focus': false }">
-      <CmInput v-bind="$attrs"
+      <DvInput v-bind="$attrs"
               v-model="input"
               @on-blur="handleBlur"
               @keypress.enter.native="handleBlur"
               :suffix="suffix"
               :class="{ 'btn-suffix': showBtn && !!suffix }">
-      </CmInput>
+      </DvInput>
       <div class="handle-btns" v-if="showBtn">
         <div class="handle-btn handle-plus" @click="handleChangeValue(step)"></div>
         <div class="handle-btn handle-minus" @click="handleChangeValue(-step)"></div>
@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import CmInput from './CmInput.vue'
+import DvInput from './DvInput.vue'
 
 export default {
   props: {
@@ -45,7 +45,7 @@ export default {
     }
   },
   components: {
-    CmInput
+    DvInput
   },
   data() {
     return {

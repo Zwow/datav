@@ -10,7 +10,7 @@
       </div>
     </div>
     <label v-if="showValue && !showInput">{{ `${prefix}${value}${suffix}` }}</label>
-    <CmInputNumber class="cm-input-number"
+    <DvInputNumber class="cm-input-number"
                   :style="{ width: `${inputWidth}px` }"
                   v-if="showInput"
                   :max="max"
@@ -21,12 +21,12 @@
                   :prefix="prefix"
                   :suffix="suffix"
                   v-on="$listeners">
-    </CmInputNumber>
+    </DvInputNumber>
   </div>
 </template>
 
 <script>
-import CmInputNumber from './CmInputNumber.vue'
+import DvInputNumber from './DvInputNumber.vue'
 
 export default {
   props: {
@@ -64,7 +64,7 @@ export default {
     }
   },
   components: {
-    CmInputNumber
+    DvInputNumber
   },
   data() {
     return {
