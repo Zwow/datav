@@ -26,16 +26,16 @@
       <template v-else>
         <SettingRow label="对齐工具">
           <div class="align-row">
-            <DvIconButton class="align-button" icon="align-left" title="左对齐"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-top" title="顶部对齐"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-right" title="右对齐"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-bottom" title="底部对齐"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-middle" title="垂直居中对齐"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-center" title="水平居中对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-left" title="左对齐" @on-click="handleAlignTopLeft"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-top" title="顶部对齐" @on-click="handleAlignTopLeft(false)"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-right" title="右对齐" @on-click="handleAlignBottomRight"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-bottom" title="底部对齐" @on-click="handleAlignBottomRight(false)"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-center" title="垂直居中对齐" @on-click="handleAlignCenter"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-middle" title="水平居中对齐" @on-click="handleAlignBottomRight(false)"></DvIconButton>
           </div>
           <div class="align-row">
-            <DvIconButton class="align-button" icon="align-vertical" title="垂直分布"></DvIconButton>
-            <DvIconButton class="align-button" icon="align-horizontal" title="水平分布"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-vertical" title="垂直分布" @on-click="handleDistribution"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-horizontal" title="水平分布" @on-click="handleDistribution(false)"></DvIconButton>
           </div>
         </SettingRow>
       </template>

@@ -1,5 +1,9 @@
 <template>
-  <div class="screen-canvas" ref="canvas">
+  <div class="screen-canvas"
+      ref="canvas"
+      @mousedown="handleMouseDown"
+      @mouseup="handleMouseUp"
+      @mousemove="handleMouseMove">
     <ScrollView class="canvas-scroll-view"
               :scroll="canvasScroll"
               @on-scroll="handleScroll">
@@ -16,9 +20,7 @@
               height: `${displayScreenHeight}px`,
               backgroundColor
             }"
-            @mousedown="handleMouseDown"
-            @mouseup="handleMouseUp"
-            @mousemove="handleMouseMove">
+            >
           <div v-for="(widget, id) in widgets"
               :key="id"
               class="widget-wrapper"
@@ -47,6 +49,14 @@
         </div>
       </div>
     </ScrollView>
+    <div class="select-box"
+        v-if="showSelectBox"
+        :style="{
+          width: `${selectBoxSize[0]}px`,
+          height: `${selectBoxSize[1]}px`,
+          transform: `translate3D(${selectBoxOrigin[0]}px, ${selectBoxOrigin[1]}px, 0)`
+        }">
+    </div>
     <CanvasZoomer class="canvas-zoomer"></CanvasZoomer>
   </div>
 </template>
@@ -131,6 +141,7 @@ function nwSyncTransform(item, value) {
 
 const DRAG = 1,
       RESIZE = 2,
+      SELECT = 3,
       mapping = {
         e: {
           axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
@@ -183,6 +194,10 @@ export default {
       // get it by screenRect[mapping.index]
       screenRect: [],
       downPoint: [],
+      // 长宽
+      selectBoxSize: [0, 0],
+      // 左上点
+      selectBoxOrigin: [0, 0],
       cursors: [
         {
           dr: 'n', 
@@ -226,10 +241,16 @@ export default {
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
     ]),
+    canvasRect() {
+      return [this.screenRect[0] - this.SCREEN_LEFT, this.screenRect[1] - this.SCREEN_TOP]
+    },
     ...mapGetters([
       'displayScreenWidth', 'displayScreenHeight',
       'screenWrapperWidth', 'screenWrapperHeight'
-    ])
+    ]),
+    showSelectBox() {
+      return this.mode === SELECT && this.selectBoxSize.every(e => e > 0)
+    }
   },
   watch: {
     canvasZoomLevel(nv, old) {
@@ -310,9 +331,16 @@ export default {
         this.mode = RESIZE
         return
       }
-      // 不是widget或cursor
+      // 不是widget或cursor时，清空选择
       this.emptySelectedWidget()
       this.relativeElement = null
+
+      // 在screen或者screen-wrapper上按下，框选组件
+      if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
+        this.mode = SELECT
+        console.log()
+        return
+      }
       this.mode = null
       return
     },
@@ -342,10 +370,10 @@ export default {
       }
     },
     handleMouseMove(e) {
+      const { pageX, pageY } = e
       // widget drag
       if (this.mode === DRAG) {
-        const { pageX, pageY } = e,
-              refPoint = this.widgets[this.relativeElement].transform
+        const refPoint = this.widgets[this.relativeElement].transform
         this.selectedWidget.forEach((index) => {
           const { transform } = this.widgets[index]
           const offsets = [refPoint[0] - transform[0], refPoint[1] - transform[1]]
@@ -362,6 +390,15 @@ export default {
           })
         })
         return
+      }
+      // selectbox
+      if (this.mode === SELECT) {
+        const [dx, dy] = this.downPoint
+        this.selectBoxOrigin = [
+          (dx < pageX ? dx : pageX) - this.canvasRect[0],
+          (dy < pageY ? dy : pageY) - this.canvasRect[1],
+        ]
+        this.selectBoxSize = [Math.abs(dx - pageX), Math.abs(dy - pageY)]
       }
     },
     resize(e) {
@@ -467,6 +504,7 @@ export default {
   .screen {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     overflow: hidden;
+    position: relative;
     .widget-wrapper {
       display: inline-block;
       vertical-align: top;
@@ -482,7 +520,7 @@ export default {
         width: 100%;
         box-sizing: border-box;
         &.active {
-          border: 1px solid $theme-color;
+          border: 1px solid lighten($secondary-theme-color, 10);
           .cursor {
             display: inline-block;
           }
@@ -490,15 +528,23 @@ export default {
         .cursor {
           height: 6px;
           width: 6px;
-          border: 1px solid #ccc;
+          border: 1px solid $secondary-theme-color;
+          box-sizing: border-box;
           display: none;
           position: absolute;
           background-color: #fff;
-          border-radius: 50%;
+          // border-radius: 50%;
           transform: translate3d(-50%, -50%, 0);
         }
       }
     }
+  }
+  .select-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px dashed $secondary-theme-color;
+    box-sizing: border-box;
   }
   .canvas-zoomer {
     position: absolute;
