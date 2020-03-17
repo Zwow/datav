@@ -35,6 +35,7 @@ export default {
   line-height: normal;
   background-color: $theme-color;
   transition: .3s;
+  cursor: pointer;
   .iconfont {
     margin-right: 10px;
   }

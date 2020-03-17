@@ -63,6 +63,7 @@ import CanvasZoomer from './CanvasZoomer.vue'
 // 1、给各种事件加debounce
 // 2、不应该允许将width, height设置为0，最小也要>0，如0.00001, 否则无法恢复?
 
+// ========= RESIZE FUNCTIONS START =========
 function posTransform(item, value, refs) {
   // s, e
   // widget width/height
@@ -126,6 +127,8 @@ function nwSyncTransform(item, value) {
   }
 }
 
+// ========= RESIZE FUNCTIONS END =========
+
 const DRAG = 1,
       RESIZE = 2,
       mapping = {
@@ -168,7 +171,6 @@ export default {
   },
   data() {
     return {
-      selectedWidget: [],
       // element to be dragged, resized
       relativeElement: null,
       // drag, resize
@@ -219,7 +221,7 @@ export default {
   },
   computed: {
     ...mapState([
-      'widgets',
+      'widgets', 'selectedWidget',
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
@@ -236,7 +238,8 @@ export default {
   },
   methods: {
     ...mapMutations([
-      'addWidgets', 'removeWidgets', 'editWidget',
+      'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
+      'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll'
     ]),
@@ -248,72 +251,17 @@ export default {
       const rect = this.$refs.screen.getBoundingClientRect()
       this.screenRect = [rect.left, rect.top]
     },
-    handleAlignTopLeft(alignLeft) {
-      const i = alignLeft ? 0 : 1
-      let v = this.widgets[this.selectedWidget[0]].transform[i]
-      this.selectedWidget.forEach((index) => {
-        v = Math.min(v, this.widgets[index].transform[i])
-      })
-      this.selectedWidget.forEach((index) => {
-        this.$set(this.widgets[index].transform, i, v)
-      })
-    },
-    handleAlignCenter(vertical) {
-      const i = vertical ? 0 : 1, dim = vertical ? 'width' : 'height'
-      let v1 = this.widgets[this.selectedWidget[0]].transform[i],
-          v2 = this.widgets[this.selectedWidget[0]].transform[i] + this.widgets[this.selectedWidget[0]][dim]
-      this.selectedWidget.forEach((index) => {
-        v1 = Math.min(v1, this.widgets[index].transform[i])
-        v2 = Math.max(v2, this.widgets[index].transform[i] + this.widgets[index][dim])
-      })
-      const baseLine = (v1 + v2) / 2
-      this.selectedWidget.forEach((index) => {
-        this.$set(this.widgets[index].transform, i, baseLine - this.widgets[index][dim] / 2)
-      })
-    },
-    handleAlignBottomRight(alignRight) {
-      const i = alignRight ? 0 : 1, dim = alignRight ? 'width' : 'height'
-      let v = this.widgets[this.selectedWidget[0]].transform[i] + this.widgets[this.selectedWidget[0]][dim]
-      this.selectedWidget.forEach((index) => {
-        v = Math.max(v, this.widgets[index].transform[i] + this.widgets[index][dim])
-      })
-      this.selectedWidget.forEach((index) => {
-        this.$set(this.widgets[index].transform, i, v - this.widgets[index][dim])
-      })
-    },
-    handleDistribution(vertical) {
-      const i = vertical ? 1 : 0, dim = vertical ? 'height' : 'width'
-      // 按left/top值先后排序
-      const selected = this.selectedWidget.slice().sort((a, b) =>
-        this.widgets[a].transform[i] - this.widgets[b].transform[i]
-      )
-      const interval = selected.slice(0, -1).reduce((res, id, index) => {
-        const next = selected[index + 1]
-        res += (this.widgets[next].transform[i] - this.widgets[id].transform[i] - this.widgets[id][dim])
-        return res
-      }, 0) / (selected.length - 1)
-      selected.slice(1, -1).forEach((id, index) => {
-        const pre = this.widgets[selected[index]]
-        this.$set(this.widgets[id].transform, i, pre.transform[i] + pre[dim] + interval)
-      })
-    },
     handleDelete() {
-      // this.widgets = this.widgets.filter((e, id) => this.selectedWidget.indexOf(id) === -1)
       this.removeWidgets(this.selectedWidget)
-      this.selectedWidget = []
+      this.emptySelectedWidget()
     },
     handleNewWidget() {
-      // this.widgets.push(new Widget({
-      //   width: 100,
-      //   height: 100,
-      //   backgroundColor: '#CCCCCC'
-      // }))
       this.addWidgets(new Widget({
         width: 100,
         height: 100,
         backgroundColor: '#CCCCCC'
       }))
-      this.selectedWidget = [this.widgets.length - 1]
+      this.setSelectedWidget([this.widgets.length - 1])
     },
     handleNewChart() {
       this.handleNewWidget()
@@ -334,8 +282,7 @@ export default {
             type: 'bar'
           }]
         })
-        // this.$set(this.widgets[this.selectedWidget[0]], 'chart', chart)
-        this.editWidget({ index: this.selectedWidget[0], payload: { chart } })
+        this.editWidgetByKey({ index: this.selectedWidget[0], key: 'chart', value: chart })
       })
     },
     // drag = down + move + up
@@ -364,7 +311,7 @@ export default {
         return
       }
       // 不是widget或cursor
-      this.selectedWidget = []
+      this.emptySelectedWidget()
       this.relativeElement = null
       this.mode = null
       return
@@ -380,18 +327,18 @@ export default {
         // 按下ctrl
         if (ctrlKey) {
           if (selected) {
-            this.selectedWidget.splice(index, 1)
+            this.removeSelectedWidget(index)
             return
           }
-          this.selectedWidget.push(eleId)
+          this.addSelectedWidget(eleId)
           return
         }
         // 没有选中或多于一个选中
         if (this.selectedWidget.length !== 1 || !selected) {
-          this.selectedWidget = [eleId]
+          this.setSelectedWidget([eleId])
           return
         }
-        this.selectedWidget = []
+        this.emptySelectedWidget()
       }
     },
     handleMouseMove(e) {
@@ -402,8 +349,7 @@ export default {
         this.selectedWidget.forEach((index) => {
           const { transform } = this.widgets[index]
           const offsets = [refPoint[0] - transform[0], refPoint[1] - transform[1]]
-          // this.widgets[index].transform = [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]]
-          this.editWidget({ index, payload: { transform: [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]] } })
+          this.editWidgetByKey({ index, key: 'transform', value: [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]] })
         })
         return
       }
@@ -443,17 +389,9 @@ export default {
     },
     scaleWidgets(diff) {
       this.widgets.forEach((widget, index) => {
-        // this.$set(widget, 'height', widget.height * (1 + diff))
-        // this.$set(widget, 'width', widget.width * (1 + diff))
-        // this.$set(widget, 'transform', widget.transform.map((e) => e * (1 + diff)))
-        this.editWidget({
-          index,
-          payload: {
-            height: widget.height * (1 + diff),
-            width: widget.width * (1 + diff),
-            transform: widget.transform.map((e) => e * (1 + diff))
-          }
-        })
+        this.editWidgetByKey({ index, key: 'height', value: widget.height * (1 + diff) })
+        this.editWidgetByKey({ index, key: 'width', value: widget.width * (1 + diff) })
+        this.editWidgetByKey({ index, key: 'transform', value: widget.transform.map((e) => e * (1 + diff)) })
         this.$nextTick(() => {
           widget.chart && widget.chart.resize()
         })
@@ -486,6 +424,9 @@ export default {
       // 调整画面缩放使其全部可见
       this.getProperZoomLevel()
       this.handleNewChart()
+      this.handleNewChart()
+      this.handleNewChart()
+      this.setSelectedWidget([0, 1, 2])
     })
   },
   beforeDestroy() {
@@ -529,6 +470,7 @@ export default {
     .widget-wrapper {
       display: inline-block;
       vertical-align: top;
+      position: absolute;
       .widget {
         overflow: hidden;
       }

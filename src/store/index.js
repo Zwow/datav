@@ -19,7 +19,7 @@ export default new Vuex.Store({
     screenHeight: 1080,
     screenWidth: 1920,
     widgets: [],
-    selectedWidgets: [],
+    selectedWidget: [],
     backgroundColor: '#313b44'
   },
   getters: {
@@ -74,11 +74,23 @@ export default new Vuex.Store({
         state.widgets.splice(index, 1)
       }
     },
-    editWidget(state, { index, payload }) {
-      Object.keys(payload).forEach((k) => {
-        Vue.set(state.widgets[index], k, payload[k])
-      })
-      console.log('#$', state.widgets[index])
+    editWidgetByKey(state, { index, key, value }) {
+      Vue.set(state.widgets[index], key, value)
+    },
+    setWidgetTransform(state, { index, transformIndex, value }) {
+      Vue.set(state.widgets[index].transform, transformIndex, value)
+    },
+    emptySelectedWidget(state) {
+      state.selectedWidget = []
+    },
+    setSelectedWidget(state, indexArr) {
+      state.selectedWidget = indexArr
+    },
+    addSelectedWidget(state, index) {
+      state.selectedWidget.push(index)
+    },
+    removeSelectedWidget(state, index) {
+      state.selectedWidget.splice(index, 1)
     }
   }
 })

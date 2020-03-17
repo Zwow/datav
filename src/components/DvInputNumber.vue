@@ -124,6 +124,7 @@ export default {
 
 .cm-input-number-wrapper {
   display: inline-block;
+  width: 100px;
   color: $font-color-white;
 }
 
@@ -149,7 +150,7 @@ export default {
     display: flex;
     flex-direction: column;
     .handle-btn {
-      flex: 1 1 50%;
+      flex: 0 0 50%;
       width: 100%;
       position: relative;
       background-color: #393939;
@@ -157,13 +158,18 @@ export default {
         cursor: pointer;
         &::after {
           content: $content;
+          display: block;
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate3d(-50%, -55%, 0);
+          text-align: center;
+          line-height: 1;
+          width: 100%;
+          color: #aaa;
         }
         &:hover {
           background-color: #444;
+          &::after {
+            color: #fff;
+          }
         }
       }
       &:first-child {
@@ -191,7 +197,7 @@ export default {
       width: 100%;
       height: 1px;
       top: 50%;
-      transform: translate3d(0, -50%, 0);
+      transform: translate3d(0, -100%, 0);
     }
   }
 }

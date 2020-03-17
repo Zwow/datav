@@ -1,31 +1,43 @@
 <template>
   <div class="setting-panel">
     <div class="setting-title">
-      屏幕设置
+      {{ settingTitle }}
     </div>
     <ScrollView class="setting-panel-body">
-      <template>
-        <div class="setting-row">
-          <label>屏幕尺寸</label>
-          <div class="content">
-            <!-- 最小300x300，最大暂定8K分辨率 -->
+      <template v-if="showScreenSetting">
+        <!-- 最小300x300，最大暂定8K分辨率 -->
+        <SettingRow label="屏幕尺寸">
+          <div class="flex-row">
             宽<DvInputNumber class="size-input" :precise="0" :min="300" :max="7680" v-model="width"></DvInputNumber>
             高<DvInputNumber class="size-input" :precise="0" :min="300" :max="4320" v-model="height"></DvInputNumber>
           </div>
-        </div>
-        <div class="setting-row">
-          <label>背景颜色</label>
-          <div class="content">
-            <DvColorPicker v-model="background" @on-change="handleChange"></DvColorPicker><br/>
+        </SettingRow>
+        <SettingRow label="背景颜色">
+          <DvColorPicker v-model="background" @on-change="handleChange"></DvColorPicker>
+        </SettingRow>
+        <SettingRow label="背景图">
+          <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
+        </SettingRow>
+        <!-- <DvButton @on-click="handleClick">保存</DvButton> -->
+      </template>
+      <template v-else-if="showWidgetSetting">
+        widget setting
+      </template>
+      <template v-else>
+        <SettingRow label="对齐工具">
+          <div class="align-row">
+            <DvIconButton class="align-button" icon="align-left" title="左对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-top" title="顶部对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-right" title="右对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-bottom" title="底部对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-middle" title="垂直居中对齐"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-center" title="水平居中对齐"></DvIconButton>
           </div>
-        </div>
-        <div class="setting-row">
-          <label>背景图</label>
-          <div class="content">
-            <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
+          <div class="align-row">
+            <DvIconButton class="align-button" icon="align-vertical" title="垂直分布"></DvIconButton>
+            <DvIconButton class="align-button" icon="align-horizontal" title="水平分布"></DvIconButton>
           </div>
-        </div>
-        <DvButton @on-click="handleClick">保存</DvButton>
+        </SettingRow>
       </template>
     </ScrollView>
   </div>
@@ -34,10 +46,12 @@
 <script>
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import ScrollView from './ScrollView.vue'
+import SettingRow from './SettingRow.vue'
 import DvInputNumber from './DvInputNumber.vue'
 import DvColorPicker from './DvColorPicker.vue'
 import DvInput from './DvInput.vue'
 import DvButton from './DvButton.vue'
+import DvIconButton from './DvIconButton.vue'
 
 export default {
   data() {
@@ -47,13 +61,36 @@ export default {
   },
   components: {
     ScrollView,
+    SettingRow,
     DvInputNumber,
     DvColorPicker,
     DvInput,
-    DvButton
+    DvButton,
+    DvIconButton
   },
   computed: {
-    ...mapState(['screenHeight', 'screenWidth', 'backgroundColor']),
+    ...mapState([
+      'screenHeight', 'screenWidth', 'backgroundColor',
+      'widgets', 'selectedWidget'
+    ]),
+    showScreenSetting() {
+      return this.selectedWidget.length === 0
+    },
+    showWidgetSetting() {
+      return this.selectedWidget.length === 1
+    },
+    showOtherSetting() {
+      return this.selectedWidget.length > 1
+    },
+    settingTitle() {
+      if (this.showScreenSetting) {
+        return '屏幕设置'
+      }
+      if (this.showWidgetSetting) {
+        return '组件设置'
+      }
+      return '其他'
+    },
     width: {
       get() {
         return this.screenWidth
@@ -80,12 +117,61 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['setScreenWidth', 'setScreenHeight', 'setBackgroundColor']),
+    ...mapMutations([
+      'setScreenWidth', 'setScreenHeight', 'setBackgroundColor',
+      'setWidgetTransform'
+    ]),
+    handleAlignTopLeft(alignLeft) {
+      const i = alignLeft ? 0 : 1
+      let v = this.widgets[this.selectedWidget[0]].transform[i]
+      this.selectedWidget.forEach((index) => {
+        v = Math.min(v, this.widgets[index].transform[i])
+      })
+      this.selectedWidget.forEach((index) => {
+        this.$set(this.widgets[index].transform, i, v)
+      })
+    },
+    handleAlignCenter(vertical) {
+      const i = vertical ? 0 : 1, dim = vertical ? 'width' : 'height'
+      let v1 = this.widgets[this.selectedWidget[0]].transform[i],
+          v2 = this.widgets[this.selectedWidget[0]].transform[i] + this.widgets[this.selectedWidget[0]][dim]
+      this.selectedWidget.forEach((index) => {
+        v1 = Math.min(v1, this.widgets[index].transform[i])
+        v2 = Math.max(v2, this.widgets[index].transform[i] + this.widgets[index][dim])
+      })
+      const baseLine = (v1 + v2) / 2
+      this.selectedWidget.forEach((index) => {
+        this.$set(this.widgets[index].transform, i, baseLine - this.widgets[index][dim] / 2)
+      })
+    },
+    handleAlignBottomRight(alignRight) {
+      const i = alignRight ? 0 : 1, dim = alignRight ? 'width' : 'height'
+      let v = this.widgets[this.selectedWidget[0]].transform[i] + this.widgets[this.selectedWidget[0]][dim]
+      this.selectedWidget.forEach((index) => {
+        v = Math.max(v, this.widgets[index].transform[i] + this.widgets[index][dim])
+      })
+      this.selectedWidget.forEach((index) => {
+        this.$set(this.widgets[index].transform, i, v - this.widgets[index][dim])
+      })
+    },
+    handleDistribution(vertical) {
+      const i = vertical ? 1 : 0, dim = vertical ? 'height' : 'width'
+      // 按left/top值先后排序
+      const selected = this.selectedWidget.slice().sort((a, b) =>
+        this.widgets[a].transform[i] - this.widgets[b].transform[i]
+      )
+      const interval = selected.slice(0, -1).reduce((res, id, index) => {
+        const next = selected[index + 1]
+        res += (this.widgets[next].transform[i] - this.widgets[id].transform[i] - this.widgets[id][dim])
+        return res
+      }, 0) / (selected.length - 1)
+      selected.slice(1, -1).forEach((id, index) => {
+        const pre = this.widgets[selected[index]]
+        this.$set(this.widgets[id].transform, i, pre.transform[i] + pre[dim] + interval)
+      })
+    },
     handleChange(v) {
       console.log(v)
-    },
-    handleClick() {
-      console.log('###', this.backgroundColor)
     }
   }
 }
@@ -97,36 +183,26 @@ export default {
 .setting-panel {
   overflow: hidden;
   .setting-title {
-    height: 36px;
+    height: 30px;
     background-color: $background-medium-dark;
-    line-height: 36px;
+    line-height: 30px;
     padding: 0 10px;
   }
   .setting-panel-body {
-    height: calc(100% - 36px);
-    .setting-row {
+    height: calc(100% - 30px);
+    .flex-row {
       display: flex;
-      margin: 30px 10px;
-      label {
-        flex: 0 0 80px;
-        margin-right: 15px;
-        text-align: center;
-      }
-      .content {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        font-size: $font-size-small;
-        color: $font-color-dark;
-        .size-input {
-          width: 75px;
-          margin-left: 5px;
-          margin-right: 15px;
-          &:last-child {
-            margin-right: 0;
-          }
-        }
-      }
+      align-items: center;
+      justify-content: space-between;
+    }
+    .size-input {
+      width: 72px;
+    }
+    .align-row {
+      margin-bottom: 10px;
+    }
+    .align-button {
+      margin-right: 3px;
     }
   }
 }

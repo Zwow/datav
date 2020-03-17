@@ -1,5 +1,5 @@
 <template>
-  <div class="cm-icon-button">
+  <div class="cm-icon-button" @click="(e) => $emit('on-click', e)" :title="title">
     <i :class="`iconfont icon-${icon}`" v-if="icon"></i>
     <slot></slot>
   </div>
@@ -9,6 +9,9 @@
 export default {
   props: {
     icon: {
+      type: String
+    },
+    title: {
       type: String
     }
   }
@@ -20,13 +23,14 @@ export default {
 
 .cm-icon-button {
   height: 25px;
-  padding: 0 4px;
+  width: 25px;
   border: 1px solid $border-color-dark;
   background-color: $background-rare-dark;
   box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
+  line-height: 22px;
+  text-align: center;
+  vertical-align: top;
   cursor: pointer;
   transition: .2s;
   color: $font-color-dark;

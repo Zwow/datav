@@ -9,7 +9,7 @@
                 suffix="%"
                 show-input>
       </DvSlider>
-      <DvIconButton class="icon-button" icon="fullscreen" @click.native="handleSetProperZoomLevel"></DvIconButton>
+      <DvIconButton class="icon-button" icon="fullscreen" @on-click="handleSetProperZoomLevel"></DvIconButton>
     </div>
   </div>
 </template>
