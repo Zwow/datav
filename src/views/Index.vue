@@ -1,5 +1,7 @@
 <template>
-  <div id="index" class="h-w-100">
+  <div id="index"
+      class="h-w-100"
+      @mousemove="handleMouseMove">
     <AppHeader class="app-header"></AppHeader>
     <div class="app-body">
       <WidgetList class="widget-list"></WidgetList>
@@ -37,6 +39,8 @@ export default {
     LayerPanel
   },
   methods: {
+    handleMouseMove(e) {
+    }
   }
 }
 </script>

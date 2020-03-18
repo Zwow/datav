@@ -41,6 +41,7 @@
                     v-for="(cursor, index) in cursors"
                     :key="index"
                     :data-id="id"
+                    :data-cursor-index="index"
                     :data-cursor="cursor.dr"
                     :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
               </span>
@@ -54,7 +55,7 @@
         :style="{
           width: `${selectBoxSize[0]}px`,
           height: `${selectBoxSize[1]}px`,
-          transform: `translate3D(${selectBoxOrigin[0]}px, ${selectBoxOrigin[1]}px, 0)`
+          transform: `translate3D(${selectBoxOffsetOrigin[0]}px, ${selectBoxOffsetOrigin[1]}px, 0)`
         }">
     </div>
     <CanvasZoomer class="canvas-zoomer"></CanvasZoomer>
@@ -165,6 +166,8 @@ const DRAG = 1,
 const BACKSPACE = 8,
       DELETE = 46
 
+let screenRect = []
+
 class Widget {
   constructor(opt) {
     this.height = opt.height
@@ -172,6 +175,18 @@ class Widget {
     this.backgroundColor = opt.backgroundColor
     this.transform = [0, 0]
     this.index = 0
+  }
+  get pageX() {
+    return this.transform[0] + screenRect[0]
+  }
+  get pageY() {
+    return this.transform[1] + screenRect[1]
+  }
+  get endPageX() {
+    return this.pageX + this.width
+  }
+  get endPageY() {
+    return this.pageY + this.height
   }
 }
 
@@ -182,54 +197,94 @@ export default {
   },
   data() {
     return {
-      // element to be dragged, resized
-      relativeElement: null,
-      // drag, resize
+      // drag, resize, selectbox
       mode: null,
-      offsets: [0, 0],
       cursor: 'n',
-      // widgets: [],
-      // containter left corner to page left corner, [left, top]
-      // update when this component mounted
-      // get it by screenRect[mapping.index]
-      screenRect: [],
+      cursorIndex: 0,
+      // 鼠标downpoint
       downPoint: [],
-      // 长宽
-      selectBoxSize: [0, 0],
-      // 左上点
+      // dragpoint - downpoint, 带方向
+      selectBoxVector: [0, 0],
+      // 按下鼠标后每次移动的变化量
+      selectBoxDiff: [0, 0],
+      // 左上点(pageX, pageY)
       selectBoxOrigin: [0, 0],
       cursors: [
         {
           dr: 'n', 
-          pos: [50, 0]
+          pos: [50, 0],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.nResize(index)
+            })
+          }
         },
         {
           dr: 'e', 
-          pos: [100, 50]
+          pos: [100, 50],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.eResize(index)
+            })
+          }
         },
         {
           dr: 's', 
-          pos: [50, 100]
+          pos: [50, 100],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.sResize(index)
+            })
+          }
         },
         {
           dr: 'w',
-          pos: [0, 50]
+          pos: [0, 50],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.wResize(index)
+            })
+          }
         },
         {
           dr: 'se', 
-          pos: [100, 100]
+          pos: [100, 100],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.sResize(index)
+              this.eResize(index)
+            })
+          }
         },
         {
           dr: 'sw', 
-          pos: [0, 100]
+          pos: [0, 100],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.sResize(index)
+              this.wResize(index)
+            })
+          }
         },
         {
           dr: 'ne', 
-          pos: [100, 0]
+          pos: [100, 0],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.nResize(index)
+              this.eResize(index)
+            })
+          }
         },
         {
           dr: 'nw', 
-          pos: [0, 0]
+          pos: [0, 0],
+          resize: () => {
+            this.selectedWidget.forEach((index) => {
+              this.nResize(index)
+              this.wResize(index)
+            })
+          }
         }
       ]
     }
@@ -242,14 +297,31 @@ export default {
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
     ]),
     canvasRect() {
-      return [this.screenRect[0] - this.SCREEN_LEFT, this.screenRect[1] - this.SCREEN_TOP]
+      return [screenRect[0] - this.SCREEN_LEFT, screenRect[1] - this.SCREEN_TOP]
     },
     ...mapGetters([
       'displayScreenWidth', 'displayScreenHeight',
       'screenWrapperWidth', 'screenWrapperHeight'
     ]),
+    // selectbox的右下角点
+    selectBoxEndPoint() {
+      return [
+        this.selectBoxOrigin[0] + this.selectBoxVector[0],
+        this.selectBoxOrigin[1] + this.selectBoxVector[1]
+      ]
+    },
+    // 减去canvas的坐标得到框选盒子的原点
+    selectBoxOffsetOrigin() {
+      return [
+        this.selectBoxOrigin[0] - this.canvasRect[0],
+        this.selectBoxOrigin[1] - this.canvasRect[1]
+      ]
+    },
+    selectBoxSize() {
+      return this.selectBoxVector.map(e => Math.abs(e))
+    },
     showSelectBox() {
-      return this.mode === SELECT && this.selectBoxSize.every(e => e > 0)
+      return this.mode === SELECT && this.selectBoxSize.every(e => e)
     }
   },
   watch: {
@@ -262,15 +334,58 @@ export default {
       'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
       'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
-      'setProperZoomLevel', 'setCanvasScroll'
+      'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
+    eResize(index) {
+      // selectbox的原点要在widget的正方向
+      // 否则每一次越过边界后鼠标和真正的锚点的距离会渐增
+      // 其他所有正向边同理
+      const target = this.widgets[index],
+            width = this.selectBoxOrigin[0] + this.canvasScroll[0] > target.pageX ? target.width + this.selectBoxDiff[0] : 0
+      this.editWidgetByKey({ index, key: 'width', value: width })
+    },
+    sResize(index) {
+      const target = this.widgets[index],
+            height = this.selectBoxOrigin[1] + this.canvasScroll[1] > target.pageY ? target.height + this.selectBoxDiff[1] : 0
+      this.editWidgetByKey({ index, key: 'height', value: height })
+    },
+    wResize(index) {
+      // bug
+      // 在做负方向的缩放时，一旦设置为0，但由于外层有widget-mask的边框
+      // 而widget本身会缩放至0，因此会产生一个小抖动
+      // 这是一个视觉的问题，对程序不影响，可以为widget设置一个和widget-mask
+      // 一样大小的border且不能设置box-sizing为borderbox，这样视觉正常
+      // 但可能会影响到widget内其他元素的显示
+
+      // selectbox的终点要在widget的负方向
+      // 其他反向边同理
+      const target = this.widgets[index]
+      let width = target.width - this.selectBoxDiff[0],
+          transformX = target.transform[0] + this.selectBoxDiff[0]
+      if (this.selectBoxEndPoint[0] > target.endPageX) {
+        transformX = target.endPageX - screenRect[0]
+        width = 0
+      }
+      this.editWidgetByKey({ index, key: 'width', value: width })
+      this.setWidgetTransform({ index, transformIndex: 0, value: transformX })
+    },
+    nResize(index) {
+      const target = this.widgets[index]
+      let height = target.height - this.selectBoxDiff[1],
+          transformY = target.transform[1] + this.selectBoxDiff[1]
+      if (this.selectBoxEndPoint[1] > target.endPageY) {
+        transformY = target.endPageY - screenRect[1]
+        height = 0
+      }
+      this.editWidgetByKey({ index, key: 'height', value: height })
+      this.setWidgetTransform({ index, transformIndex: 1, value: transformY })
+    },
     handleScroll({ scrollLeft, scrollTop }) {
       this.setCanvasScroll([scrollLeft, scrollTop])
     },
     getScreenRect() {
-      // 这里不包括滚动，如果页面有滚动还要加上window.scrollX Y
       const rect = this.$refs.screen.getBoundingClientRect()
-      this.screenRect = [rect.left, rect.top]
+      screenRect = [rect.left, rect.top]
     },
     handleDelete() {
       this.removeWidgets(this.selectedWidget)
@@ -310,43 +425,38 @@ export default {
     // click = down + up
     handleMouseDown(e) {
       e.preventDefault()
-      this.downPoint = [e.pageX, e.pageY]
-      const { offsetX, offsetY, target } = e,
-            id = parseInt(target.dataset.id)
-      this.relativeElement = id
-      // 在widget-mask按下
-      if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1) {
-        // pageX - this.offsets[0] === widget左上端点到screen左上端点的X距离， Y同理
-        const rect = this.$refs.screen.getBoundingClientRect()
-        if (this.selectedWidget.indexOf(id) !== -1) {
-          this.offsets = [offsetX + rect.left + window.scrollX, offsetY + rect.top + window.scrollY]
-          this.mode = DRAG
-        }
+      const { pageX, pageY, target } = e, id = parseInt(target.dataset.id)
+      this.downPoint = [pageX, pageY]
+      // 在widget-mask按下且widget已被选择
+      if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1 &&
+        this.selectedWidget.indexOf(id) !== -1) {
+        this.mode = DRAG
         return
       }
       // 在cursor按下
       // 这时一定会有选中的widget, this.selectedWidget !== []
       if (Array.prototype.indexOf.call(target.classList, 'cursor') !== -1) {
         this.cursor = target.dataset.cursor
+        this.cursorIndex = target.dataset.cursorIndex
         this.mode = RESIZE
         return
       }
       // 不是widget或cursor时，清空选择
       this.emptySelectedWidget()
-      this.relativeElement = null
 
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
         this.mode = SELECT
-        console.log()
         return
       }
       this.mode = null
       return
     },
     handleMouseUp({ pageX, pageY, target, ctrlKey }) {
-      this.relativeElement = null
       this.mode = null
+      this.selectBoxVector = [0, 0]
+      this.selectBoxDiff = [0, 0]
+      this.selectBoxOrigin = [0, 0]
       // widget click
       if (target.dataset.id && pageX === this.downPoint[0] && pageY === this.downPoint[1]) {
         const eleId = parseInt(target.dataset.id),
@@ -370,36 +480,42 @@ export default {
       }
     },
     handleMouseMove(e) {
-      const { pageX, pageY } = e
-      // widget drag
-      if (this.mode === DRAG) {
-        const refPoint = this.widgets[this.relativeElement].transform
-        this.selectedWidget.forEach((index) => {
-          const { transform } = this.widgets[index]
-          const offsets = [refPoint[0] - transform[0], refPoint[1] - transform[1]]
-          this.editWidgetByKey({ index, key: 'transform', value: [pageX - this.offsets[0] - offsets[0], pageY - this.offsets[1] - offsets[1]] })
-        })
-        return
-      }
-      // widget resize
-      if (this.mode === RESIZE) {
-        this.resize(e)
-        this.$nextTick(() => {
+      // drag, resize, selectbox时记录一下框选盒子
+      if (this.mode) {
+        const { pageX, pageY } = e
+        const [dx, dy] = this.downPoint,
+              vector = [pageX - dx, pageY - dy]
+        this.selectBoxOrigin = [dx < pageX ? dx : pageX, dy < pageY ? dy : pageY]
+        this.selectBoxDiff = [vector[0] - this.selectBoxVector[0], vector[1] - this.selectBoxVector[1]]
+        this.selectBoxVector = vector
+        // widget drag
+        if (this.mode === DRAG) {
           this.selectedWidget.forEach((index) => {
-            this.widgets[index].chart && this.widgets[index].chart.resize()
+            const { transform } = this.widgets[index]
+            this.editWidgetByKey({
+              index,
+              key: 'transform',
+              value: [transform[0] + this.selectBoxDiff[0], transform[1] + this.selectBoxDiff[1]]
+            })
           })
-        })
-        return
+          return
+        }
+        // widget resize
+        if (this.mode === RESIZE) {
+          // this.resize(e)
+          this.cursors[this.cursorIndex].resize()
+          this.$nextTick(() => {
+            this.selectedWidget.forEach((index) => {
+              this.widgets[index].chart && this.widgets[index].chart.resize()
+            })
+          })
+          return
+        }
+        // selectbox
       }
-      // selectbox
-      if (this.mode === SELECT) {
-        const [dx, dy] = this.downPoint
-        this.selectBoxOrigin = [
-          (dx < pageX ? dx : pageX) - this.canvasRect[0],
-          (dy < pageY ? dy : pageY) - this.canvasRect[1],
-        ]
-        this.selectBoxSize = [Math.abs(dx - pageX), Math.abs(dy - pageY)]
-      }
+    },
+    resize2() {
+      
     },
     resize(e) {
       let cursor = this.cursor, vertical = ''
@@ -461,9 +577,9 @@ export default {
       // 调整画面缩放使其全部可见
       this.getProperZoomLevel()
       this.handleNewChart()
-      this.handleNewChart()
-      this.handleNewChart()
-      this.setSelectedWidget([0, 1, 2])
+      // this.handleNewChart()
+      // this.handleNewChart()
+      // this.setSelectedWidget([0, 1, 2])
     })
   },
   beforeDestroy() {
@@ -543,7 +659,8 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    border: 1px dashed $secondary-theme-color;
+    border: 1px solid $secondary-theme-color;
+    background-color: rgba($secondary-theme-color, .2);
     box-sizing: border-box;
   }
   .canvas-zoomer {
