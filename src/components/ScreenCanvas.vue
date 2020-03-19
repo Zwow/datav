@@ -21,9 +21,11 @@
               backgroundColor
             }"
             >
-          <div v-for="(widget, id) in widgets"
+          <div class="widget-wrapper"
+              v-for="(widget, id) in widgets"
               :key="id"
-              class="widget-wrapper"
+              :data-id="id"
+              :class="{ active: selectedWidget.indexOf(id) !== -1 }"
               :style="{
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
                 zIndex: widget.index
@@ -36,16 +38,13 @@
                   backgroundColor: widget.backgroundColor
                 }">
             </div>
-            <div :data-id="id" :class="`widget-mask ${selectedWidget.indexOf(id) !== -1 ? 'active' : ''}`">
-              <span class="cursor"
-                    v-for="(cursor, index) in cursors"
-                    :key="index"
-                    :data-id="id"
-                    :data-cursor-index="index"
-                    :data-cursor="cursor.dr"
-                    :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
-              </span>
-            </div>
+            <span class="cursor"
+                  v-for="(cursor, index) in cursors"
+                  :key="index"
+                  :data-id="id"
+                  :data-cursor-index="index"
+                  :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
+            </span>
           </div>
         </div>
       </div>
@@ -223,6 +222,10 @@ export default {
           dr: 'e', 
           pos: [100, 50],
           resize: () => {
+            const target = this.widgets[index],
+                  width = this.selectBoxLeft > ref.left ? ref.width + this.selectBoxDiff[0] : 0
+            this.editWidgetByKey({ index, key: 'width', value: width })
+
             this.selectedWidget.forEach((index) => {
               this.eResize(index)
             })
@@ -334,27 +337,6 @@ export default {
     },
     selectBoxBottom() {
       return this.selectBoxEndPoint[1] + this.canvasScroll[1]
-    },
-    // 所有选择的组件的盒子
-    selectedWidgetBox() {
-      const first = this.widgets[this.selectedWidget[0]]
-      if (!first) return {}
-      const rect = {
-        left: first.left,
-        top: first.top,
-        right: first.left + first.width,
-        bottom: first.top + first.height
-      }
-      for (let i = 1; i < this.selectedWidget.length; i++) {
-        const target = this.widgets[this.selectedWidget[i]]
-        if (target.left < rect.left) rect.left = target.left
-        if (target.top < rect.top) rect.top = target.top
-        if (target.right > rect.right) rect.right = target.right
-        if (target.bottom > rect.bottom) rect.bottom = target.bottom
-      }
-      rect.width = rect.right - rect.left
-      rect.height = rect.bottom - rect.top
-      return rect
     }
   },
   watch: {
@@ -384,9 +366,9 @@ export default {
     },
     wResize(index) {
       // bug
-      // 在做负方向的缩放时，一旦设置为0，但由于外层有widget-mask的边框
+      // 在做负方向的缩放时，一旦设置为0，但由于外层有widget-wrapper的边框
       // 整体最小会是2，但widget本身会缩放至0，因此会产生一个小抖动
-      // 这是一个视觉的问题，对程序不影响，可以为widget设置一个和widget-mask
+      // 这是一个视觉的问题，对程序不影响，可以为widget设置一个和widget-wrapper
       // 一样大小的border且不能设置box-sizing为borderbox，这样视觉正常
       // 但可能会影响到widget内其他元素的显示
 
@@ -460,8 +442,8 @@ export default {
       e.preventDefault()
       const { pageX, pageY, target } = e, id = parseInt(target.dataset.id)
       this.downPoint = [pageX, pageY]
-      // 在widget-mask按下且widget已被选择
-      if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1) {
+      // 在widget-wrapper按下且widget已被选择
+      if (Array.prototype.indexOf.call(target.classList, 'widget-wrapper') !== -1) {
         // drag
         if (this.selectedWidget.indexOf(id) !== -1) {
           this.mode = DRAG
@@ -478,7 +460,6 @@ export default {
       }
       // 不是widget或cursor时，清空选择
       this.emptySelectedWidget()
-
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
         this.mode = SELECT
@@ -537,6 +518,7 @@ export default {
         }
         // widget resize
         if (this.mode === RESIZE) {
+          console.log(e)
           this.cursors[this.cursorIndex].resize()
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
@@ -659,30 +641,33 @@ export default {
       .widget {
         overflow: hidden;
       }
-      .widget-mask {
+      .cursor {
         position: absolute;
-        top: 0;
-        left: 0;
+        display: none;
+        height: 6px;
+        width: 6px;
+        border: 1px solid $secondary-theme-color;
+        box-sizing: border-box;
+        background-color: #fff;
+        transform: translate3d(-50%, -50%, 0);
+        z-index: 2;
+      }
+      &::after {
+        content: '';
         height: 100%;
         width: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
         box-sizing: border-box;
-        border: 1px solid transparent;
-        &.active {
+        z-index: 1;
+      }
+      &.active {
+        &::after {
           border: 1px solid lighten($secondary-theme-color, 10);
-          .cursor {
-            display: inline-block;
-          }
         }
         .cursor {
-          height: 6px;
-          width: 6px;
-          border: 1px solid $secondary-theme-color;
-          box-sizing: border-box;
-          display: none;
-          position: absolute;
-          background-color: #fff;
-          // border-radius: 50%;
-          transform: translate3d(-50%, -50%, 0);
+          display: block;
         }
       }
     }
