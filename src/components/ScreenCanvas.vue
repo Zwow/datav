@@ -334,6 +334,27 @@ export default {
     },
     selectBoxBottom() {
       return this.selectBoxEndPoint[1] + this.canvasScroll[1]
+    },
+    // 所有选择的组件的盒子
+    selectedWidgetBox() {
+      const first = this.widgets[this.selectedWidget[0]]
+      if (!first) return {}
+      const rect = {
+        left: first.left,
+        top: first.top,
+        right: first.left + first.width,
+        bottom: first.top + first.height
+      }
+      for (let i = 1; i < this.selectedWidget.length; i++) {
+        const target = this.widgets[this.selectedWidget[i]]
+        if (target.left < rect.left) rect.left = target.left
+        if (target.top < rect.top) rect.top = target.top
+        if (target.right > rect.right) rect.right = target.right
+        if (target.bottom > rect.bottom) rect.bottom = target.bottom
+      }
+      rect.width = rect.right - rect.left
+      rect.height = rect.bottom - rect.top
+      return rect
     }
   },
   watch: {
@@ -455,10 +476,8 @@ export default {
         this.mode = RESIZE
         return
       }
-      console.log(id, this.selectedWidget.indexOf(id) !== -1)
       // 不是widget或cursor时，清空选择
       this.emptySelectedWidget()
-      console.log('????')
 
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
