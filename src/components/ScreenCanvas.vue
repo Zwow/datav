@@ -176,17 +176,17 @@ class Widget {
     this.transform = [0, 0]
     this.index = 0
   }
-  get pageX() {
+  get left() {
     return this.transform[0] + screenRect[0]
   }
-  get pageY() {
+  get top() {
     return this.transform[1] + screenRect[1]
   }
-  get endPageX() {
-    return this.pageX + this.width
+  get right() {
+    return this.left + this.width
   }
-  get endPageY() {
-    return this.pageY + this.height
+  get bottom() {
+    return this.top + this.height
   }
 }
 
@@ -322,6 +322,18 @@ export default {
     },
     showSelectBox() {
       return this.mode === SELECT && this.selectBoxSize.every(e => e)
+    },
+    selectBoxLeft() {
+      return this.selectBoxOrigin[0] + this.canvasScroll[0]
+    },
+    selectBoxTop() {
+      return this.selectBoxOrigin[1] + this.canvasScroll[1]
+    },
+    selectBoxRight() {
+      return this.selectBoxEndPoint[0] + this.canvasScroll[0]
+    },
+    selectBoxBottom() {
+      return this.selectBoxEndPoint[1] + this.canvasScroll[1]
     }
   },
   watch: {
@@ -341,18 +353,18 @@ export default {
       // 否则每一次越过边界后鼠标和真正的锚点的距离会渐增
       // 其他所有正向边同理
       const target = this.widgets[index],
-            width = this.selectBoxOrigin[0] + this.canvasScroll[0] > target.pageX ? target.width + this.selectBoxDiff[0] : 0
+            width = this.selectBoxLeft > target.left ? target.width + this.selectBoxDiff[0] : 0
       this.editWidgetByKey({ index, key: 'width', value: width })
     },
     sResize(index) {
       const target = this.widgets[index],
-            height = this.selectBoxOrigin[1] + this.canvasScroll[1] > target.pageY ? target.height + this.selectBoxDiff[1] : 0
+            height = this.selectBoxTop > target.top ? target.height + this.selectBoxDiff[1] : 0
       this.editWidgetByKey({ index, key: 'height', value: height })
     },
     wResize(index) {
       // bug
       // 在做负方向的缩放时，一旦设置为0，但由于外层有widget-mask的边框
-      // 而widget本身会缩放至0，因此会产生一个小抖动
+      // 整体最小会是2，但widget本身会缩放至0，因此会产生一个小抖动
       // 这是一个视觉的问题，对程序不影响，可以为widget设置一个和widget-mask
       // 一样大小的border且不能设置box-sizing为borderbox，这样视觉正常
       // 但可能会影响到widget内其他元素的显示
@@ -362,8 +374,8 @@ export default {
       const target = this.widgets[index]
       let width = target.width - this.selectBoxDiff[0],
           transformX = target.transform[0] + this.selectBoxDiff[0]
-      if (this.selectBoxEndPoint[0] > target.endPageX) {
-        transformX = target.endPageX - screenRect[0]
+      if (this.selectBoxRight > target.right) {
+        transformX = target.right - screenRect[0]
         width = 0
       }
       this.editWidgetByKey({ index, key: 'width', value: width })
@@ -373,8 +385,8 @@ export default {
       const target = this.widgets[index]
       let height = target.height - this.selectBoxDiff[1],
           transformY = target.transform[1] + this.selectBoxDiff[1]
-      if (this.selectBoxEndPoint[1] > target.endPageY) {
-        transformY = target.endPageY - screenRect[1]
+      if (this.selectBoxBottom > target.bottom) {
+        transformY = target.bottom - screenRect[1]
         height = 0
       }
       this.editWidgetByKey({ index, key: 'height', value: height })
@@ -428,21 +440,25 @@ export default {
       const { pageX, pageY, target } = e, id = parseInt(target.dataset.id)
       this.downPoint = [pageX, pageY]
       // 在widget-mask按下且widget已被选择
-      if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1 &&
-        this.selectedWidget.indexOf(id) !== -1) {
-        this.mode = DRAG
+      if (Array.prototype.indexOf.call(target.classList, 'widget-mask') !== -1) {
+        // drag
+        if (this.selectedWidget.indexOf(id) !== -1) {
+          this.mode = DRAG
+        }
+        // 其他，如点击
         return
       }
       // 在cursor按下
       // 这时一定会有选中的widget, this.selectedWidget !== []
       if (Array.prototype.indexOf.call(target.classList, 'cursor') !== -1) {
-        this.cursor = target.dataset.cursor
         this.cursorIndex = target.dataset.cursorIndex
         this.mode = RESIZE
         return
       }
+      console.log(id, this.selectedWidget.indexOf(id) !== -1)
       // 不是widget或cursor时，清空选择
       this.emptySelectedWidget()
+      console.log('????')
 
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
@@ -502,7 +518,6 @@ export default {
         }
         // widget resize
         if (this.mode === RESIZE) {
-          // this.resize(e)
           this.cursors[this.cursorIndex].resize()
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
@@ -513,9 +528,6 @@ export default {
         }
         // selectbox
       }
-    },
-    resize2() {
-      
     },
     resize(e) {
       let cursor = this.cursor, vertical = ''
@@ -577,8 +589,8 @@ export default {
       // 调整画面缩放使其全部可见
       this.getProperZoomLevel()
       this.handleNewChart()
-      // this.handleNewChart()
-      // this.handleNewChart()
+      this.handleNewChart()
+      this.handleNewChart()
       // this.setSelectedWidget([0, 1, 2])
     })
   },
@@ -635,6 +647,7 @@ export default {
         height: 100%;
         width: 100%;
         box-sizing: border-box;
+        border: 1px solid transparent;
         &.active {
           border: 1px solid lighten($secondary-theme-color, 10);
           .cursor {
