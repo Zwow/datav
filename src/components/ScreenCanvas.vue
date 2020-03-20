@@ -19,29 +19,32 @@
               width: `${displayScreenWidth}px`,
               height: `${displayScreenHeight}px`,
               backgroundColor
-            }"
-            >
-          <div class="widget-wrapper"
-              v-for="(widget, id) in widgets"
-              :key="id"
-              :data-id="id"
-              :class="{ active: selectedWidget.indexOf(id) !== -1 }"
+            }">
+          <!-- 组件 -->
+          <div class="widget"
+              ref="widget"
+              v-for="(widget, index) in widgets"
+              :key="index"
+              :data-id="index"
               :style="{
+                height: `${widget.height}px`,
+                width: `${widget.width}px`,
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
+                backgroundColor: widget.backgroundColor,
                 zIndex: widget.index
               }">
-            <div class="widget"
-                ref="widget"
-                :style="{
-                  height: `${widget.height}px`,
-                  width: `${widget.width}px`,
-                  backgroundColor: widget.backgroundColor
-                }">
-            </div>
+          </div>
+          <!-- 组件的选中框 -->
+          <div class="selected-widget-box"
+              v-show="showSelectedWidgetBox"
+              :style="{
+                width: `${selectedWidgetBox.width}px`,
+                height: `${selectedWidgetBox.height}px`,
+                transform: `translate3D(${selectedWidgetBox.x}px, ${selectedWidgetBox.y}px, 0)`
+              }">
             <span class="cursor"
                   v-for="(cursor, index) in cursors"
                   :key="index"
-                  :data-id="id"
                   :data-cursor-index="index"
                   :style="{ cursor: `${cursor.dr}-resize`, left: `${cursor.pos[0]}%`, top: `${cursor.pos[1]}%` }">
             </span>
@@ -142,6 +145,7 @@ function nwSyncTransform(item, value) {
 const DRAG = 1,
       RESIZE = 2,
       SELECT = 3,
+      DIM_MIN = 2,
       mapping = {
         e: {
           axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
@@ -172,7 +176,7 @@ class Widget {
     this.height = opt.height
     this.width = opt.width
     this.backgroundColor = opt.backgroundColor
-    this.transform = [0, 0]
+    this.transform = [20, 20]
     this.index = 0
   }
   get left() {
@@ -213,8 +217,20 @@ export default {
           dr: 'n', 
           pos: [50, 0],
           resize: () => {
-            this.selectedWidget.forEach((index) => {
-              this.nResize(index)
+            const zero = this.selectBoxBottom >= this.selectedWidgetBox.bottom,
+                  { height, top, y } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[1] / height
+            this.selectedWidget.forEach((index, i) => {
+              let widget = this.widgets[index],
+                  widgetHeight = widget.height * (1 - ratio),
+                  topVal = widget.top - top,
+                  widgetLeft = widget.transform[1] + this.selectBoxDiff[1] - topVal * ratio
+              if (zero) {
+                widgetHeight = widget.height / height * DIM_MIN
+                widgetLeft = y + height - DIM_MIN + (topVal / height) * DIM_MIN
+              }
+              this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
+              this.setWidgetTransform({ index, transformIndex: 1, value: widgetLeft })
             })
           }
         },
@@ -222,12 +238,20 @@ export default {
           dr: 'e', 
           pos: [100, 50],
           resize: () => {
-            const target = this.widgets[index],
-                  width = this.selectBoxLeft > ref.left ? ref.width + this.selectBoxDiff[0] : 0
-            this.editWidgetByKey({ index, key: 'width', value: width })
-
-            this.selectedWidget.forEach((index) => {
-              this.eResize(index)
+            const zero = this.selectBoxLeft <= this.selectedWidgetBox.left,
+                  { width, left, x } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[0] / width
+            this.selectedWidget.forEach((index, i) => {
+              let widget = this.widgets[index],
+                  widgetWidth = widget.width * (1 + ratio),
+                  leftVal = widget.left - left,
+                  widgetLeft = widget.transform[0] + leftVal * ratio
+              if (zero) {
+                widgetWidth = widget.width / width * DIM_MIN
+                widgetLeft = x + (leftVal / width) * DIM_MIN
+              }
+              this.editWidgetByKey({ index, key: 'width', value: widgetWidth })
+              this.setWidgetTransform({ index, transformIndex: 0, value: widgetLeft })
             })
           }
         },
@@ -235,8 +259,20 @@ export default {
           dr: 's', 
           pos: [50, 100],
           resize: () => {
-            this.selectedWidget.forEach((index) => {
-              this.sResize(index)
+            const zero = this.selectBoxTop <= this.selectedWidgetBox.top,
+                  { height, top, y } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[1] / height
+            this.selectedWidget.forEach((index, i) => {
+              let widget = this.widgets[index],
+                  widgetHeight = widget.height * (1 + ratio),
+                  topVal = widget.top - top,
+                  widgetTop = widget.transform[1] + topVal * ratio
+              if (zero) {
+                widgetHeight = widget.height / height * DIM_MIN
+                widgetTop = y + (topVal / height) * DIM_MIN
+              }
+              this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
+              this.setWidgetTransform({ index, transformIndex: 1, value: widgetTop })
             })
           }
         },
@@ -244,8 +280,20 @@ export default {
           dr: 'w',
           pos: [0, 50],
           resize: () => {
-            this.selectedWidget.forEach((index) => {
-              this.wResize(index)
+            const zero = this.selectBoxRight >= this.selectedWidgetBox.right,
+                  { width, left, x } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[0] / width
+            this.selectedWidget.forEach((index, i) => {
+              let widget = this.widgets[index],
+                  widgetWidth = widget.width * (1 - ratio),
+                  leftVal = widget.left - left,
+                  widgetLeft = widget.transform[0] + this.selectBoxDiff[0] - leftVal * ratio
+              if (zero) {
+                widgetWidth = widget.width / width * DIM_MIN
+                widgetLeft = x + width - DIM_MIN + (leftVal / width) * DIM_MIN
+              }
+              this.editWidgetByKey({ index, key: 'width', value: widgetWidth })
+              this.setWidgetTransform({ index, transformIndex: 0, value: widgetLeft })
             })
           }
         },
@@ -337,6 +385,37 @@ export default {
     },
     selectBoxBottom() {
       return this.selectBoxEndPoint[1] + this.canvasScroll[1]
+    },
+    showSelectedWidgetBox() {
+      return this.selectedWidget.length > 0
+    },
+    selectedWidgetBox() {
+      if (!this.selectedWidget.length) return {}
+      const first = this.widgets[this.selectedWidget[0]]
+      const rect = {
+        left: first.left,
+        top: first.top,
+        right: first.right,
+        bottom: first.bottom,
+        x: first.transform[0],
+        y: first.transform[1]
+      }
+      for (let i = 1; i < this.selectedWidget.length; i++) {
+        const widget = this.widgets[this.selectedWidget[i]]
+        if (widget.left < rect.left) {
+          rect.left = widget.left
+          rect.x = widget.transform[0]
+        }
+        if (widget.top < rect.top) {
+          rect.top = widget.top
+          rect.y = widget.transform[1]
+        }
+        if (widget.right > rect.right) rect.right = widget.right
+        if (widget.bottom > rect.bottom) rect.bottom = widget.bottom
+      }
+      rect.width = rect.right - rect.left
+      rect.height = rect.bottom - rect.top
+      return rect
     }
   },
   watch: {
@@ -440,15 +519,32 @@ export default {
     // click = down + up
     handleMouseDown(e) {
       e.preventDefault()
-      const { pageX, pageY, target } = e, id = parseInt(target.dataset.id)
+      const { pageX, pageY, target } = e
       this.downPoint = [pageX, pageY]
-      // 在widget-wrapper按下且widget已被选择
-      if (Array.prototype.indexOf.call(target.classList, 'widget-wrapper') !== -1) {
-        // drag
-        if (this.selectedWidget.indexOf(id) !== -1) {
-          this.mode = DRAG
+      // 在widget按下
+      if (Array.prototype.indexOf.call(target.classList, 'widget') !== -1) {
+        const widgetId = parseInt(target.dataset.id),
+              index = this.selectedWidget.indexOf(widgetId),
+              selected = index !== -1
+        // 按下ctrl
+        if (e.ctrlKey) {
+          if (selected) {
+            this.removeSelectedWidget(index)
+            return
+          }
+          this.addSelectedWidget(widgetId)
+          return
         }
-        // 其他，如点击
+        // 没有选中或多于一个选中
+        if (this.selectedWidget.length !== 1 || !selected) {
+          this.setSelectedWidget([widgetId])
+          return
+        }
+        // 有且只有自己被选中时，再点击时不反应
+        return
+      }
+      if (Array.prototype.indexOf.call(target.classList, 'selected-widget-box') !== -1) {
+        this.mode = DRAG
         return
       }
       // 在cursor按下
@@ -458,8 +554,8 @@ export default {
         this.mode = RESIZE
         return
       }
-      // 不是widget或cursor时，清空选择
-      this.emptySelectedWidget()
+      // 不是widget, cursor, selected-widget-box，清空选择
+        this.emptySelectedWidget()
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
         this.mode = SELECT
@@ -473,27 +569,6 @@ export default {
       this.selectBoxVector = [0, 0]
       this.selectBoxDiff = [0, 0]
       this.selectBoxOrigin = [0, 0]
-      // widget click
-      if (target.dataset.id && pageX === this.downPoint[0] && pageY === this.downPoint[1]) {
-        const eleId = parseInt(target.dataset.id),
-            index = this.selectedWidget.indexOf(eleId),
-            selected = index !== -1
-        // 按下ctrl
-        if (ctrlKey) {
-          if (selected) {
-            this.removeSelectedWidget(index)
-            return
-          }
-          this.addSelectedWidget(eleId)
-          return
-        }
-        // 没有选中或多于一个选中
-        if (this.selectedWidget.length !== 1 || !selected) {
-          this.setSelectedWidget([eleId])
-          return
-        }
-        this.emptySelectedWidget()
-      }
     },
     handleMouseMove(e) {
       // drag, resize, selectbox时记录一下框选盒子
@@ -518,7 +593,6 @@ export default {
         }
         // widget resize
         if (this.mode === RESIZE) {
-          console.log(e)
           this.cursors[this.cursorIndex].resize()
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
@@ -612,6 +686,13 @@ export default {
 <style lang="scss" scoped>
 @import "../scss/vars.scss";
 
+// mixin class
+.abs-element {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
 .screen-canvas {
   position: relative;
   background: #2A2E33;
@@ -627,55 +708,40 @@ export default {
     width: 100%;
   }
   .screen-wrapper {
+    // fix right margin/padding issue
     display: inline-block;
     vertical-align: top;
   }
   .screen {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
-    overflow: hidden;
     position: relative;
-    .widget-wrapper {
-      display: inline-block;
-      vertical-align: top;
-      position: absolute;
-      .widget {
-        overflow: hidden;
+    .widget {
+      @extend .abs-element;
+      &::after {
+        content: '';
+        width: 100%;
+        height: 100%;
+        @extend .abs-element;
       }
+    }
+    .selected-widget-box {
+      @extend .abs-element;
+      border: 1px solid lighten($secondary-theme-color, 10);
+      box-sizing: border-box;
       .cursor {
         position: absolute;
-        display: none;
+        display: block;
         height: 6px;
         width: 6px;
         border: 1px solid $secondary-theme-color;
         box-sizing: border-box;
         background-color: #fff;
         transform: translate3d(-50%, -50%, 0);
-        z-index: 2;
-      }
-      &::after {
-        content: '';
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        left: 0;
-        top: 0;
-        box-sizing: border-box;
-        z-index: 1;
-      }
-      &.active {
-        &::after {
-          border: 1px solid lighten($secondary-theme-color, 10);
-        }
-        .cursor {
-          display: block;
-        }
       }
     }
   }
   .select-box {
-    position: absolute;
-    top: 0;
-    left: 0;
+    @extend .abs-element;
     border: 1px solid $secondary-theme-color;
     background-color: rgba($secondary-theme-color, .2);
     box-sizing: border-box;
