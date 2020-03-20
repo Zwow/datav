@@ -74,99 +74,15 @@ import CanvasZoomer from './CanvasZoomer.vue'
 
 // todo
 // 1、给各种事件加debounce
-// 2、不应该允许将width, height设置为0，最小也要>0，如0.00001, 否则无法恢复?
 
-// ========= RESIZE FUNCTIONS START =========
-function posTransform(item, value, refs) {
-  // s, e
-  // widget width/height
-  const l = item[this.dim] * value / refs
-  if (l > 0) item[this.dim] = l
-}
-
-function ngtTransform(item, value) {
-  // n, w
-  // widget width/height, left/top
-  const l = item[this.dim] - value
-  if (l > 0) {
-    item[this.dim] = l
-    Vue.set(item.transform, this.index, item.transform[this.index] + value)
-  }
-}
-
-function posSyncTransform(item, value, refs) {
-  const l = value / refs * item[this.odim]
-  if (l > 0) {
-    Vue.set(item.transform, this.oIndex, item.transform[this.oIndex] - (l - item[this.odim]) / 2)
-    item[this.odim] = l
-  }
-}
-
-function ngtSyncTransform(item, value) {
-  const l = item[this.dim] - value
-  if (l > 0) {
-    const v = item[this.odim] * l / item[this.dim],
-          diff = (v - item[this.odim]) / 2
-    item[this.odim] = v
-    Vue.set(item.transform, this.oIndex, item.transform[this.oIndex] - diff)
-  }
-}
-
-function seSyncTransform(item, value, refs) {
-  const l = value / refs * item[this.odim]
-  if (l > 0) item[this.odim] = l
-}
-
-function neSyncTransform(item, value, refs) {
-  const l = value / refs * item[this.odim]
-  if (l > 0) {
-    Vue.set(item.transform, this.oIndex, item.transform[this.oIndex] - l + item[this.odim])
-    item[this.odim] = l
-  }
-}
-
-function swSyncTransform(item, value) {
-  const l = (item[this.dim] - value) / item[this.dim] * item[this.odim]
-  if (l > 0 ) item[this.odim] = l
-}
-
-function nwSyncTransform(item, value) {
-  const l = item[this.dim] - value
-  if (l > 0) {
-    const v = item[this.odim] * l / item[this.dim],
-          diff = (v - item[this.odim])
-    item[this.odim] = v
-    Vue.set(item.transform, this.oIndex, item.transform[this.oIndex] - diff)
-  }
-}
-
-// ========= RESIZE FUNCTIONS END =========
-
-const DRAG = 1,
+// const
+const DIM_MIN = 2,
+      // mouse event
+      DRAG = 1,
       RESIZE = 2,
       SELECT = 3,
-      DIM_MIN = 2,
-      mapping = {
-        e: {
-          axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
-          transform: posTransform, sync: posSyncTransform, ssync: seSyncTransform, nsync: neSyncTransform
-        },
-        s: {
-          axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0,
-          transform: posTransform, sync: posSyncTransform
-        },
-        w: {
-          axis: 'X', dim: 'width', odim: 'height', index: 0, oIndex: 1,
-          transform: ngtTransform, sync: ngtSyncTransform, ssync: swSyncTransform, nsync: nwSyncTransform
-        },
-        n: {
-          axis: 'Y', dim: 'height', odim: 'width', index: 1, oIndex: 0,
-          transform: ngtTransform, sync: ngtSyncTransform
-        }
-      }
-
-// keycode
-const BACKSPACE = 8,
+      // keycode
+      BACKSPACE = 8,
       DELETE = 46
 
 let screenRect = []
@@ -217,20 +133,10 @@ export default {
           dr: 'n', 
           pos: [50, 0],
           resize: () => {
-            const zero = this.selectBoxBottom >= this.selectedWidgetBox.bottom,
-                  { height, top, y } = this.selectedWidgetBox,
+            const { height, top, y } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[1] / height
-            this.selectedWidget.forEach((index, i) => {
-              let widget = this.widgets[index],
-                  widgetHeight = widget.height * (1 - ratio),
-                  topVal = widget.top - top,
-                  widgetLeft = widget.transform[1] + this.selectBoxDiff[1] - topVal * ratio
-              if (zero) {
-                widgetHeight = widget.height / height * DIM_MIN
-                widgetLeft = y + height - DIM_MIN + (topVal / height) * DIM_MIN
-              }
-              this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
-              this.setWidgetTransform({ index, transformIndex: 1, value: widgetLeft })
+            this.selectedWidget.forEach((index) => {
+              this.nResize(index, height, top, y, ratio)
             })
           }
         },
@@ -238,15 +144,14 @@ export default {
           dr: 'e', 
           pos: [100, 50],
           resize: () => {
-            const zero = this.selectBoxLeft <= this.selectedWidgetBox.left,
-                  { width, left, x } = this.selectedWidgetBox,
+            const { width, left, x } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[0] / width
             this.selectedWidget.forEach((index, i) => {
               let widget = this.widgets[index],
                   widgetWidth = widget.width * (1 + ratio),
                   leftVal = widget.left - left,
                   widgetLeft = widget.transform[0] + leftVal * ratio
-              if (zero) {
+              if (this.selectBoxLeftBoundary) {
                 widgetWidth = widget.width / width * DIM_MIN
                 widgetLeft = x + (leftVal / width) * DIM_MIN
               }
@@ -259,15 +164,14 @@ export default {
           dr: 's', 
           pos: [50, 100],
           resize: () => {
-            const zero = this.selectBoxTop <= this.selectedWidgetBox.top,
-                  { height, top, y } = this.selectedWidgetBox,
+            const { height, top, y } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index, i) => {
               let widget = this.widgets[index],
                   widgetHeight = widget.height * (1 + ratio),
                   topVal = widget.top - top,
                   widgetTop = widget.transform[1] + topVal * ratio
-              if (zero) {
+              if (this.selectBoxTopBoundary) {
                 widgetHeight = widget.height / height * DIM_MIN
                 widgetTop = y + (topVal / height) * DIM_MIN
               }
@@ -280,15 +184,14 @@ export default {
           dr: 'w',
           pos: [0, 50],
           resize: () => {
-            const zero = this.selectBoxRight >= this.selectedWidgetBox.right,
-                  { width, left, x } = this.selectedWidgetBox,
+            const { width, left, x } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[0] / width
             this.selectedWidget.forEach((index, i) => {
               let widget = this.widgets[index],
                   widgetWidth = widget.width * (1 - ratio),
                   leftVal = widget.left - left,
                   widgetLeft = widget.transform[0] + this.selectBoxDiff[0] - leftVal * ratio
-              if (zero) {
+              if (this.selectBoxRightBoundary) {
                 widgetWidth = widget.width / width * DIM_MIN
                 widgetLeft = x + width - DIM_MIN + (leftVal / width) * DIM_MIN
               }
@@ -374,17 +277,17 @@ export default {
     showSelectBox() {
       return this.mode === SELECT && this.selectBoxSize.every(e => e)
     },
-    selectBoxLeft() {
-      return this.selectBoxOrigin[0] + this.canvasScroll[0]
+    selectBoxLeftBoundary() {
+      return this.selectBoxOrigin[0] + this.canvasScroll[0] <= this.selectedWidgetBox.left
     },
-    selectBoxTop() {
-      return this.selectBoxOrigin[1] + this.canvasScroll[1]
+    selectBoxTopBoundary() {
+      return this.selectBoxOrigin[1] + this.canvasScroll[1] <= this.selectedWidgetBox.top
     },
-    selectBoxRight() {
-      return this.selectBoxEndPoint[0] + this.canvasScroll[0]
+    selectBoxRightBoundary() {
+      return this.selectBoxEndPoint[0] + this.canvasScroll[0] >= this.selectedWidgetBox.right
     },
-    selectBoxBottom() {
-      return this.selectBoxEndPoint[1] + this.canvasScroll[1]
+    selectBoxBottomBoundary() {
+      return this.selectBoxEndPoint[1] + this.canvasScroll[1] >= this.selectedWidgetBox.bottom
     },
     showSelectedWidgetBox() {
       return this.selectedWidget.length > 0
@@ -463,16 +366,17 @@ export default {
       this.editWidgetByKey({ index, key: 'width', value: width })
       this.setWidgetTransform({ index, transformIndex: 0, value: transformX })
     },
-    nResize(index) {
-      const target = this.widgets[index]
-      let height = target.height - this.selectBoxDiff[1],
-          transformY = target.transform[1] + this.selectBoxDiff[1]
-      if (this.selectBoxBottom > target.bottom) {
-        transformY = target.bottom - screenRect[1]
-        height = 0
+    nResize(index, height, top, y, ratio) {
+      let widget = this.widgets[index],
+          widgetHeight = widget.height * (1 - ratio),
+          topVal = widget.top - top,
+          widgetLeft = widget.transform[1] + this.selectBoxDiff[1] - topVal * ratio
+      if (this.selectBoxBottomBoundary) {
+        widgetHeight = widget.height / height * DIM_MIN
+        widgetLeft = y + height - DIM_MIN + (topVal / height) * DIM_MIN
       }
-      this.editWidgetByKey({ index, key: 'height', value: height })
-      this.setWidgetTransform({ index, transformIndex: 1, value: transformY })
+      this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
+      this.setWidgetTransform({ index, transformIndex: 1, value: widgetLeft })
     },
     handleScroll({ scrollLeft, scrollTop }) {
       this.setCanvasScroll([scrollLeft, scrollTop])
@@ -603,24 +507,6 @@ export default {
         }
         // selectbox
       }
-    },
-    resize(e) {
-      let cursor = this.cursor, vertical = ''
-      if (this.cursor.length === 2 && e.shiftKey) {
-        [vertical, cursor] = cursor
-      }
-      Array.prototype.forEach.call(cursor, (direction) => {
-        const map = mapping[direction],
-              transform = this.widgets[this.relativeElement].transform[map.index],
-              // 这里要减去screen距离页面左上角的xy值
-              value = e[`page${map.axis}`] - this.screenRect[map.index] - transform,
-              refs = this.widgets[this.relativeElement][map.dim]
-        this.selectedWidget.forEach((index) => {
-          const target = this.widgets[index]
-          e.shiftKey && map[`${vertical}sync`](target, value, refs)
-          map.transform(target, value, refs)
-        })
-      })
     },
     keydownHandler({ keyCode }) {
       
