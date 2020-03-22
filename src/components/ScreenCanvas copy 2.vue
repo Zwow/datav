@@ -135,6 +135,9 @@ export default {
             this.selectedWidget.forEach((index) => {
               this.negResize(index, height, top, y, ratio, 'height', 'top', 1, 'bottom')
             })
+          },
+          syncResize: () => {
+
           }
         },
         {
@@ -144,7 +147,18 @@ export default {
             const { width, left, x } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[0] / width
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, width, left, x, ratio, 'width', 'left', 0)
+              this.posResize(index, width, left, x, ratio, 'width', 'left', 0, 'left')
+            })
+          },
+          syncResize: () => {
+            const { width, left, x, height, top, y } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[0] / width,
+                  // 此时要指定最小的高度而还不是用DIM_MIN，否则缩放至最小时
+                  // 会变成正方形，因为此时width和height的最小值都是DIM_MIN
+                  minHeight = height / width * DIM_MIN
+            this.selectedWidget.forEach((index) => {
+              this.posResize(index, width, left, x, ratio, 'width', 'left', 0, 'left')
+              this.posResize(index, height, top, y, ratio, 'height', 'top', 1, 'left', minHeight)
             })
           }
         },
@@ -155,9 +169,9 @@ export default {
             const { height, top, y } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, height, top, y, ratio, 'height', 'top', 1)
+              this.posResize(index, height, top, y, ratio, 'height', 'top', 1, 'top')
             })
-          }
+          },
         },
         {
           dr: 'w',
@@ -178,8 +192,16 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, width, left, x, ratio1, 'width', 'left', 0)
-              this.posResize(index, height, top, y, ratio2, 'height', 'top', 1)
+              this.posResize(index, width, left, x, ratio, 'width', 'left', 0, 'left')
+              this.posResize(index, height, top, y, ratio, 'height', 'top', 1, 'left', minHeight)
+            })
+          },
+          syncResize: () => {
+            const { width, left, x, height, top, y } = this.selectedWidgetBox,
+                  ratio = this.selectBoxDiff[0] / width
+            this.selectedWidget.forEach((index) => {
+              this.posResize(index, width, left, x, ratio, 'width', 'left', 0, 'left')
+              this.posResize(index, height, top, y, ratio, 'height', 'top', 1, 'left')
             })
           }
         },
@@ -191,7 +213,7 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, height, top, y, ratio2, 'height', 'top', 1)
+              this.posResize(index, height, top, y, ratio2, 'height', 'top', 1, 'top')
               this.negResize(index, width, left, x, ratio1, 'width', 'left', 0, 'right')
             })
           }
@@ -205,7 +227,7 @@ export default {
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
               this.negResize(index, height, top, y, ratio2, 'height', 'top', 1, 'bottom')
-              this.posResize(index, width, left, x, ratio1, 'width', 'left', 0)
+              this.posResize(index, width, left, x, ratio1, 'width', 'left', 0, 'left')
             })
           }
         },
@@ -315,7 +337,7 @@ export default {
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
-    posResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex) {
+    posResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, boundaryKey, minValue = DIM_MIN) {
       // 可能会算出height/width(dimVal) <= 0的情况，导致错误的resize
       // widget[dimKey] * (1 + ratio) <= 0, 所以ratio <= -1
       // 所以this.selectBoxDiff / height(width) <= -1, 此时selectBoxDiff一定为负
@@ -327,30 +349,30 @@ export default {
           dimVal = widget[dimKey] * (1 + ratio),
           offsetValBase = widget[offsetKey] - offset,
           offsetVal = widget.transform[transformIndex] + offsetValBase * ratio
-      if (dimVal < 0 && !this[`${offsetKey}Boundary`]) {
+      if (dimVal < 0 && !this[`${boundaryKey}Boundary`]) {
         console.log('######## pos resize unexpected value ########')
-        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${offsetKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
+        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${boundaryKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
         console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey}, offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
       }
-      if (this[`${offsetKey}Boundary`] || dimVal <= 0) {
-        dimVal = widget[dimKey] / dim * DIM_MIN
-        offsetVal = transform + (offsetValBase / dim) * DIM_MIN
+      if (this[`${boundaryKey}Boundary`] || dimVal <= 0) {
+        dimVal = widget[dimKey] / dim * minValue
+        offsetVal = transform + (offsetValBase / dim) * minValue
       }
       this.editWidgetByKey({ index, key: dimKey, value: dimVal })
       this.setWidgetTransform({ index, transformIndex, value: offsetVal })
     },
-    negResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, opOffsetKey) {
+    negResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, boundaryKey) {
       // 同上，如果ratio >= 1，height/width 会出现负值
       let widget = this.widgets[index],
           dimVal = widget[dimKey] * (1 - ratio),
           offestValBase = widget[offsetKey] - offset,
           offsetVal = widget.transform[transformIndex] + this.selectBoxDiff[transformIndex] - offestValBase * ratio
-      if (dimVal < 0 && !this[`${opOffsetKey}Boundary`]) {
+      if (dimVal < 0 && !this[`${boundaryKey}Boundary`]) {
         console.log('######## neg resize unexpected value ########')
-        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${opOffsetKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
-        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey}, offsetKey: ${offsetKey}, transformIndex: ${transformIndex}, opOffsetKey: ${opOffsetKey}`)
+        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${boundaryKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
+        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey}, offsetKey: ${offsetKey}, transformIndex: ${transformIndex}, boundaryKey: ${boundaryKey}`)
       }
-      if (this[`${opOffsetKey}Boundary`] || dimVal <= 0) {
+      if (this[`${boundaryKey}Boundary`] || dimVal <= 0) {
         dimVal = widget[dimKey] / dim * DIM_MIN
         offsetVal = transform + dim - DIM_MIN + (offestValBase / dim) * DIM_MIN
       }
@@ -476,8 +498,11 @@ export default {
         }
         // widget resize
         if (this.mode === RESIZE) {
-          console.log(e.shiftKey)
-          this.cursors[this.cursorIndex].resize()
+          if (e.shiftKey) {
+            this.cursors[this.cursorIndex].syncResize()
+          } else {
+            this.cursors[this.cursorIndex].resize()
+          }
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
               this.widgets[index].chart && this.widgets[index].chart.resize()

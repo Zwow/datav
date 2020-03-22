@@ -72,6 +72,9 @@ import { debounce } from '@/util/helpers'
 import ScrollView from './ScrollView.vue'
 import CanvasZoomer from './CanvasZoomer.vue'
 
+// todo
+// 1、给各种事件加debounce
+
 // const
 const DIM_MIN = 2,
       // mouse event
@@ -133,7 +136,7 @@ export default {
             const { height, top, y } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.negResize(index, height, top, y, ratio, 'height', 'top', 1, 'bottom')
+              this.nResize(index, height, top, y, ratio)
             })
           }
         },
@@ -144,7 +147,7 @@ export default {
             const { width, left, x } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[0] / width
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, width, left, x, ratio, 'width', 'left', 0)
+              this.eResize(index, width, left, x, ratio)
             })
           }
         },
@@ -155,7 +158,7 @@ export default {
             const { height, top, y } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, height, top, y, ratio, 'height', 'top', 1)
+              this.sResize(index, height, top, y, ratio)
             })
           }
         },
@@ -166,7 +169,7 @@ export default {
             const { width, left, x } = this.selectedWidgetBox,
                   ratio = this.selectBoxDiff[0] / width
             this.selectedWidget.forEach((index) => {
-              this.negResize(index, width, left, x, ratio, 'width', 'left', 0, 'right')
+              this.wResize(index, width, left, x, ratio)
             })
           }
         },
@@ -178,8 +181,8 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, width, left, x, ratio1, 'width', 'left', 0)
-              this.posResize(index, height, top, y, ratio2, 'height', 'top', 1)
+              this.eResize(index, width, left, x, ratio1)
+              this.sResize(index, height, top, y, ratio2)
             })
           }
         },
@@ -191,8 +194,8 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.posResize(index, height, top, y, ratio2, 'height', 'top', 1)
-              this.negResize(index, width, left, x, ratio1, 'width', 'left', 0, 'right')
+              this.sResize(index, height, top, y, ratio2)
+              this.wResize(index, width, left, x, ratio1)
             })
           }
         },
@@ -204,8 +207,8 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.negResize(index, height, top, y, ratio2, 'height', 'top', 1, 'bottom')
-              this.posResize(index, width, left, x, ratio1, 'width', 'left', 0)
+              this.nResize(index, height, top, y, ratio2)
+              this.eResize(index, width, left, x, ratio1)
             })
           }
         },
@@ -217,8 +220,8 @@ export default {
                   ratio1 = this.selectBoxDiff[0] / width,
                   ratio2 = this.selectBoxDiff[1] / height
             this.selectedWidget.forEach((index) => {
-              this.negResize(index, height, top, y, ratio2, 'height', 'top', 1, 'bottom')
-              this.negResize(index, width, left, x, ratio1, 'width', 'left', 0, 'right')
+              this.nResize(index, height, top, y, ratio2)
+              this.wResize(index, width, left, x, ratio1)
             })
           }
         }
@@ -259,16 +262,16 @@ export default {
     showSelectBox() {
       return this.mode === SELECT && this.selectBoxSize.every(e => e)
     },
-    leftBoundary() {
+    selectBoxLeftBoundary() {
       return this.selectBoxOrigin[0] + this.canvasScroll[0] <= this.selectedWidgetBox.left
     },
-    topBoundary() {
+    selectBoxTopBoundary() {
       return this.selectBoxOrigin[1] + this.canvasScroll[1] <= this.selectedWidgetBox.top
     },
-    rightBoundary() {
+    selectBoxRightBoundary() {
       return this.selectBoxEndPoint[0] + this.canvasScroll[0] >= this.selectedWidgetBox.right
     },
-    bottomBoundary() {
+    selectBoxBottomBoundary() {
       return this.selectBoxEndPoint[1] + this.canvasScroll[1] >= this.selectedWidgetBox.bottom
     },
     showSelectedWidgetBox() {
@@ -316,46 +319,64 @@ export default {
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
     posResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex) {
-      // 可能会算出height/width(dimVal) <= 0的情况，导致错误的resize
-      // widget[dimKey] * (1 + ratio) <= 0, 所以ratio <= -1
-      // 所以this.selectBoxDiff / height(width) <= -1, 此时selectBoxDiff一定为负
-      // 也就是selectbox此时的偏移量(负向，也就是缩小)>=selectedWidgetBox的宽高
-      // 理论上来说如果selectbox此时是负向的，表明鼠标在做缩在小操作时
-      // 如果偏移量已经大于selectedWidgetBox的宽高，那么此时的超过boundary判定应该
-      // 是true，但现在会出现false的现象，这可能是小数点计算后数值不精确引起的
       let widget = this.widgets[index],
           dimVal = widget[dimKey] * (1 + ratio),
-          offsetValBase = widget[offsetKey] - offset,
-          offsetVal = widget.transform[transformIndex] + offsetValBase * ratio
-      if (dimVal < 0 && !this[`${offsetKey}Boundary`]) {
-        console.log('######## pos resize unexpected value ########')
-        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${offsetKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
-        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey}, offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
+          offsetVal = widget[offsetKey] - offset,
+          widgetLeft = widget.transform[0] + offsetVal * ratio
+      if (this.selectBoxLeftBoundary) {
+        dimVal = widget.width / width * DIM_MIN
+        widgetLeft = x + (offsetVal / width) * DIM_MIN
       }
-      if (this[`${offsetKey}Boundary`] || dimVal <= 0) {
-        dimVal = widget[dimKey] / dim * DIM_MIN
-        offsetVal = transform + (offsetValBase / dim) * DIM_MIN
-      }
-      this.editWidgetByKey({ index, key: dimKey, value: dimVal })
-      this.setWidgetTransform({ index, transformIndex, value: offsetVal })
+      this.editWidgetByKey({ index, key: 'width', value: dimVal })
+      this.setWidgetTransform({ index, transformIndex: 0, value: widgetLeft })
     },
-    negResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, opOffsetKey) {
-      // 同上，如果ratio >= 1，height/width 会出现负值
+    eResize(index, width, left, x, ratio) {
       let widget = this.widgets[index],
-          dimVal = widget[dimKey] * (1 - ratio),
-          offestValBase = widget[offsetKey] - offset,
-          offsetVal = widget.transform[transformIndex] + this.selectBoxDiff[transformIndex] - offestValBase * ratio
-      if (dimVal < 0 && !this[`${opOffsetKey}Boundary`]) {
-        console.log('######## neg resize unexpected value ########')
-        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${this[`${opOffsetKey}Boundary`]}, ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
-        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey}, offsetKey: ${offsetKey}, transformIndex: ${transformIndex}, opOffsetKey: ${opOffsetKey}`)
+          widgetWidth = widget.width * (1 + ratio),
+          leftVal = widget.left - left,
+          widgetLeft = widget.transform[0] + leftVal * ratio
+      if (this.selectBoxLeftBoundary) {
+        widgetWidth = widget.width / width * DIM_MIN
+        widgetLeft = x + (leftVal / width) * DIM_MIN
       }
-      if (this[`${opOffsetKey}Boundary`] || dimVal <= 0) {
-        dimVal = widget[dimKey] / dim * DIM_MIN
-        offsetVal = transform + dim - DIM_MIN + (offestValBase / dim) * DIM_MIN
+      this.editWidgetByKey({ index, key: 'width', value: widgetWidth })
+      this.setWidgetTransform({ index, transformIndex: 0, value: widgetLeft })
+    },
+    sResize(index, height, top, y, ratio) {
+      let widget = this.widgets[index],
+          widgetHeight = widget.height * (1 + ratio),
+          topVal = widget.top - top,
+          widgetTop = widget.transform[1] + topVal * ratio
+      if (this.selectBoxTopBoundary) {
+        widgetHeight = widget.height / height * DIM_MIN
+        widgetTop = y + (topVal / height) * DIM_MIN
       }
-      this.editWidgetByKey({ index, key: dimKey, value: dimVal })
-      this.setWidgetTransform({ index, transformIndex, value: offsetVal })
+      this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
+      this.setWidgetTransform({ index, transformIndex: 1, value: widgetTop })
+    },
+    wResize(index, width, left, x, ratio) {
+      let widget = this.widgets[index],
+          widgetWidth = widget.width * (1 - ratio),
+          leftVal = widget.left - left,
+          widgetLeft = widget.transform[0] + this.selectBoxDiff[0] - leftVal * ratio
+      if (this.selectBoxRightBoundary) {
+        widgetWidth = widget.width / width * DIM_MIN
+        widgetLeft = x + width - DIM_MIN + (leftVal / width) * DIM_MIN
+      }
+      this.editWidgetByKey({ index, key: 'width', value: widgetWidth })
+      this.setWidgetTransform({ index, transformIndex: 0, value: widgetLeft })
+    },
+    nResize(index, height, top, y, ratio) {
+      let widget = this.widgets[index],
+          widgetHeight = widget.height * (1 - ratio),
+          topVal = widget.top - top,
+          widgetLeft = widget.transform[1] + this.selectBoxDiff[1] - topVal * ratio
+      if (this.selectBoxBottomBoundary) {
+        widgetHeight = widget.height / height * DIM_MIN
+        widgetLeft = y + height - DIM_MIN + (topVal / height) * DIM_MIN
+      }
+      this.editWidgetByKey({ index, key: 'height', value: widgetHeight })
+      this.setWidgetTransform({ index, transformIndex: 1, value: widgetLeft })
     },
     handleScroll({ scrollLeft, scrollTop }) {
       this.setCanvasScroll([scrollLeft, scrollTop])
@@ -476,7 +497,6 @@ export default {
         }
         // widget resize
         if (this.mode === RESIZE) {
-          console.log(e.shiftKey)
           this.cursors[this.cursorIndex].resize()
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
@@ -577,13 +597,11 @@ export default {
     // fix right margin/padding issue
     display: inline-block;
     vertical-align: top;
-    overflow: hidden;
   }
   .screen {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     position: relative;
     .widget {
-      overflow: hidden;
       @extend .abs-element;
       &::after {
         content: '';
@@ -599,18 +617,12 @@ export default {
       .cursor {
         position: absolute;
         display: block;
-        padding: 4px;
+        height: 6px;
+        width: 6px;
+        border: 1px solid $secondary-theme-color;
         box-sizing: border-box;
+        background-color: #fff;
         transform: translate3d(-50%, -50%, 0);
-        &::after {
-          content: '';
-          display: block;
-          height: 6px;
-          width: 6px;
-          border: 1px solid $secondary-theme-color;
-          box-sizing: border-box;
-          background-color: #fff;
-        }
       }
     }
   }
