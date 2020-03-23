@@ -34,6 +34,15 @@
                 zIndex: widget.index
               }">
           </div>
+          <div class="widget-group"
+              v-for="(group, index) in groupBoxes"
+              :key="'group' + index"
+              :style="{
+                width: `${group.width}px`,
+                height: `${group.height}px`,
+                transform: `translate3D(${group.x}px, ${group.y}px, 0)`
+              }">
+          </div>
           <!-- 组件的选中框 -->
           <div class="selected-widget-box"
               v-show="showSelectedWidgetBox"
@@ -125,10 +134,10 @@ export default {
       selectBoxDiff: [0, 0],
       // 左上点(pageX, pageY)
       selectBoxOrigin: [0, 0],
-      mapping: {
-        e: { dim: 'width', offset: 'left', axis: 'x', i: 0 },
-        s: { dim: 'height', offset: 'top', axis: 'y', i: 1 },
-      },
+      // mapping: {
+      //   e: { dim: 'width', offset: 'left', axis: 'x', i: 0 },
+      //   s: { dim: 'height', offset: 'top', axis: 'y', i: 1 },
+      // },
       cursors: [
         {
           dr: 'n', 
@@ -292,10 +301,6 @@ export default {
             transformX && this.selectedWidget.forEach((index) => {
               this.setWidgetTransform({ index, transformIndex: 0, value: this.widgets[index].transform[0] - transformX })
             })
-            // this.chainResize([
-            //   { direction: 's', vector: 1, boundary: 'top' },
-            //   { direction: 'e', vector: -1, boundary: 'right' }
-            // ])
           },
           syncResize: () => {
             const { width, left, x, height, top, y } = this.selectedWidgetBox,
@@ -385,7 +390,7 @@ export default {
   },
   computed: {
     ...mapState([
-      'widgets', 'selectedWidget',
+      'widgets', 'selectedWidget', 'groups',
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
@@ -404,7 +409,21 @@ export default {
         this.selectBoxOrigin[1] + this.selectBoxVector[1]
       ]
     },
-    // 减去canvas的坐标得到框选盒子的原点
+    // selectbox原点坐标(相对于screen)
+    selectBoxScreenOffsetOrigin() {
+      return [
+        this.selectBoxOffsetOrigin[0] + this.canvasScroll[0] - this.SCREEN_LEFT,
+        this.selectBoxOffsetOrigin[1] + this.canvasScroll[1] - this.SCREEN_TOP
+      ]
+    },
+    // selectbox的右下角点的绝对坐标(相对于screen)
+    selectBoxScreenOffsetEndPoint() {
+      return [
+        this.selectBoxScreenOffsetOrigin[0] + this.selectBoxSize[0],
+        this.selectBoxScreenOffsetOrigin[1] + this.selectBoxSize[1]
+      ]
+    },
+    // 减去canvas的坐标得到框选盒子的原点(相对整个canvas)
     selectBoxOffsetOrigin() {
       return [
         this.selectBoxOrigin[0] - this.canvasRect[0],
@@ -459,6 +478,11 @@ export default {
       rect.width = rect.right - rect.left
       rect.height = rect.bottom - rect.top
       return rect
+    },
+    groupBoxes() {
+      return this.groups.map(group => {
+        return this.getRect(group)
+      })
     }
   },
   watch: {
@@ -473,6 +497,39 @@ export default {
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
+    getRect(indexArr) {
+      if (!indexArr.length) return {}
+      const first = this.widgets[indexArr[0]]
+      const rect = {
+        left: first.left,
+        top: first.top,
+        right: first.right,
+        bottom: first.bottom,
+        x: first.transform[0],
+        y: first.transform[1]
+      }
+      for (let i = 1; i < indexArr.length; i++) {
+        const widget = this.widgets[indexArr[i]]
+        if (widget.left < rect.left) {
+          rect.left = widget.left
+          rect.x = widget.transform[0]
+        }
+        if (widget.top < rect.top) {
+          rect.top = widget.top
+          rect.y = widget.transform[1]
+        }
+        if (widget.right > rect.right) rect.right = widget.right
+        if (widget.bottom > rect.bottom) rect.bottom = widget.bottom
+      }
+      rect.width = rect.right - rect.left
+      rect.height = rect.bottom - rect.top
+      return rect
+    },
+    // 代码优化，但过于抽象，暂时不用
+    // this.chainResize([
+    //   { direction: 's', vector: 1, boundary: 'top' },
+    //   { direction: 'e', vector: -1, boundary: 'right' }
+    // ])
     chainResize(chains) {
       const original = [this.selectedWidgetBox.width, this.selectedWidgetBox.height]
       const params = chains.map(e => {
@@ -525,13 +582,13 @@ export default {
             offsetValBase = widget[offsetKey] - offset
       let dimVal = widget[dimKey] * (1 + ratio),
           offsetVal = widget.transform[transformIndex] + offsetValBase * ratio
-      if (dimVal < 0 && !overBoundary) {
-        console.log('######## pos resize unexpected value ########')
-        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${overBoundary},
-                    ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
-        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey},
-                    offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
-      }
+      // if (dimVal < 0 && !overBoundary) {
+      //   console.log('######## resize got unexpected value ########')
+      //   console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${overBoundary},
+      //               ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
+      //   console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey},
+      //               offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
+      // }
       if (overBoundary || dimVal <= 0) {
         dimVal = widget[dimKey] / dim * minValue
         offsetVal = transform + (offsetValBase / dim) * minValue
@@ -630,6 +687,9 @@ export default {
       return
     },
     handleMouseUp({ pageX, pageY, target, ctrlKey }) {
+      if (this.mode === SELECT) {
+        this.groupSelect()
+      }
       this.mode = null
       this.selectBoxVector = [0, 0]
       this.selectBoxDiff = [0, 0]
@@ -672,6 +732,20 @@ export default {
         }
         // selectbox
       }
+    },
+    groupSelect() {
+      const [left, top] = this.selectBoxScreenOffsetOrigin,
+            [right, bottom] = this.selectBoxScreenOffsetEndPoint,
+            selected = []
+      this.widgets.forEach((widget, index) => {
+        const widgetLeft = widget.transform[0],
+              widgetTop = widget.transform[1]
+        if ((widgetLeft > left && widgetLeft < right || widgetLeft < left && widgetLeft + widget.width > left) &&
+            (widgetTop > top && widgetTop < bottom ||  widgetTop < top && widgetTop + widget.height > top)) {
+          selected.push(index)
+        }
+      })
+      this.setSelectedWidget(selected)
     },
     keydownHandler({ keyCode }) {
       
@@ -797,6 +871,14 @@ export default {
           background-color: #fff;
         }
       }
+    }
+  }
+  .widget-group {
+    @extend .abs-element;
+    box-sizing: border-box;
+    &:hover {
+      border: 1px solid $theme-color;
+      background-color: rgba($theme-color, .2);
     }
   }
   .select-box {

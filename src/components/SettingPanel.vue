@@ -4,7 +4,7 @@
       {{ settingTitle }}
     </div>
     <ScrollView class="setting-panel-body">
-      <template v-if="showScreenSetting">
+      <div v-show="showScreenSetting">
         <!-- 最小300x300，最大暂定8K分辨率 -->
         <SettingRow label="屏幕尺寸">
           <div class="flex-row">
@@ -18,12 +18,11 @@
         <SettingRow label="背景图">
           <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
         </SettingRow>
-        <!-- <DvButton @on-click="handleClick">保存</DvButton> -->
-      </template>
-      <template v-else-if="showWidgetSetting">
+      </div>
+      <div v-show="showWidgetSetting">
         widget setting
-      </template>
-      <template v-else>
+      </div>
+      <div v-show="showOtherSetting">
         <SettingRow label="对齐工具">
           <div class="align-row">
             <DvIconButton class="align-button" icon="align-left" title="左对齐" @on-click="handleAlignTopLeft"></DvIconButton>
@@ -38,7 +37,10 @@
             <DvIconButton class="align-button" icon="align-horizontal" title="水平分布" @on-click="handleDistribution(false)"></DvIconButton>
           </div>
         </SettingRow>
-      </template>
+        <SettingRow label="组别">
+          <DvButton @on-click="handleGroup">建立分组</DvButton>
+        </SettingRow>
+      </div>
     </ScrollView>
   </div>
 </template>
@@ -119,7 +121,7 @@ export default {
   methods: {
     ...mapMutations([
       'setScreenWidth', 'setScreenHeight', 'setBackgroundColor',
-      'setWidgetTransform'
+      'setWidgetTransform', 'group'
     ]),
     handleAlignTopLeft(alignLeft) {
       const i = alignLeft ? 0 : 1
@@ -172,6 +174,9 @@ export default {
     },
     handleChange(v) {
       console.log(v)
+    },
+    handleGroup() {
+      this.group() 
     }
   }
 }

@@ -20,6 +20,7 @@ export default new Vuex.Store({
     screenWidth: 1920,
     widgets: [],
     selectedWidget: [],
+    groups: [],
     backgroundColor: '#313b44'
   },
   getters: {
@@ -91,6 +92,11 @@ export default new Vuex.Store({
     },
     removeSelectedWidget(state, index) {
       state.selectedWidget.splice(index, 1)
+    },
+    group(state, indexArr) {
+      const indexes = JSON.parse(JSON.stringify(indexArr || state.selectedWidget))
+      state.groups.push(indexes)
+      console.log('groups: ', state.groups)
     }
   }
 })
