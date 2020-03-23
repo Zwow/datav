@@ -125,6 +125,10 @@ export default {
       selectBoxDiff: [0, 0],
       // 左上点(pageX, pageY)
       selectBoxOrigin: [0, 0],
+      mapping: {
+        e: { dim: 'width', offset: 'left', axis: 'x', i: 0 },
+        s: { dim: 'height', offset: 'top', axis: 'y', i: 1 },
+      },
       cursors: [
         {
           dr: 'n', 
@@ -288,6 +292,10 @@ export default {
             transformX && this.selectedWidget.forEach((index) => {
               this.setWidgetTransform({ index, transformIndex: 0, value: this.widgets[index].transform[0] - transformX })
             })
+            // this.chainResize([
+            //   { direction: 's', vector: 1, boundary: 'top' },
+            //   { direction: 'e', vector: -1, boundary: 'right' }
+            // ])
           },
           syncResize: () => {
             const { width, left, x, height, top, y } = this.selectedWidgetBox,
@@ -465,6 +473,45 @@ export default {
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
+    chainResize(chains) {
+      const original = [this.selectedWidgetBox.width, this.selectedWidgetBox.height]
+      const params = chains.map(e => {
+        const mapping = this.mapping[e.direction]
+        return [
+          this.selectedWidgetBox[mapping.dim],
+          this.selectedWidgetBox[mapping.offset],
+          this.selectedWidgetBox[mapping.axis],
+          this.selectBoxDiff[mapping.i] / this.selectedWidgetBox[mapping.dim] * e.vector,
+          mapping.dim,
+          mapping.offset,
+          mapping.i,
+          this[`${e.boundary}Boundary`],
+          e.minValue
+        ]
+      })
+      this.selectedWidget.forEach((index) => {
+        for (let i = 0; i < params.length; i++) {
+          this.esResize(index, ...params[i])
+        }
+      })
+      const transformParams = chains.filter(e => e.vector < 0).map(e => {
+        const { i, dim } = this.mapping[e.direction]
+        return {
+          transformIndex: i,
+          value: this.selectedWidgetBox[dim] - original[i]
+        }
+      })
+      transformParams.length && this.selectedWidget.forEach((index) => {
+        for (let i = 0; i < transformParams.length; i++) {
+          const { transformIndex, value } = transformParams[i]
+          this.setWidgetTransform({
+            index,
+            transformIndex,
+            value: this.widgets[index].transform[transformIndex] - value
+          })
+        }
+      })
+    },
     // 东/南方向的缩放，其他所有的缩放可配合transform得到
     esResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, overBoundary, minValue = DIM_MIN) {
       // 可能会算出height/width(dimVal) <= 0的情况，导致错误的resize
