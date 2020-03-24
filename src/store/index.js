@@ -88,7 +88,9 @@ export default new Vuex.Store({
       state.selectedWidget = indexArr
     },
     addSelectedWidget(state, index) {
-      state.selectedWidget.push(index)
+      if (state.selectedWidget.indexOf(index) === -1) {
+        state.selectedWidget.push(index)
+      }
     },
     removeSelectedWidget(state, index) {
       state.selectedWidget.splice(index, 1)

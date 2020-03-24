@@ -3,7 +3,8 @@
       ref="canvas"
       @mousedown="handleMouseDown"
       @mouseup="handleMouseUp"
-      @mousemove="handleMouseMove">
+      @mousemove="handleMouseMove"
+      @dblclick="handleDoubleClick">
     <ScrollView class="canvas-scroll-view"
               :scroll="canvasScroll"
               @on-scroll="handleScroll">
@@ -20,6 +21,27 @@
               height: `${displayScreenHeight}px`,
               backgroundColor
             }">
+          <!-- 分组 -->
+          <div class="widget-group"
+              v-for="(group, index) in groupBoxes"
+              :key="'group' + index"
+              :class="{
+                'hover': groups[index].indexOf(showGroupBorder) !== -1
+              }"
+              :style="{
+                width: `${group.width}px`,
+                height: `${group.height}px`,
+                transform: `translate3D(${group.x}px, ${group.y}px, 0)`
+              }">
+          </div>
+          <div class="selected-widget-box-background"
+              v-show="showSelectedWidgetBox"
+              :style="{
+                width: `${selectedWidgetBox.width}px`,
+                height: `${selectedWidgetBox.height}px`,
+                transform: `translate3D(${selectedWidgetBox.x}px, ${selectedWidgetBox.y}px, 0)`
+              }">
+          </div>
           <!-- 组件 -->
           <div class="widget"
               ref="widget"
@@ -32,15 +54,6 @@
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
                 backgroundColor: widget.backgroundColor,
                 zIndex: widget.index
-              }">
-          </div>
-          <div class="widget-group"
-              v-for="(group, index) in groupBoxes"
-              :key="'group' + index"
-              :style="{
-                width: `${group.width}px`,
-                height: `${group.height}px`,
-                transform: `translate3D(${group.x}px, ${group.y}px, 0)`
               }">
           </div>
           <!-- 组件的选中框 -->
@@ -385,7 +398,8 @@ export default {
             })
           }
         }
-      ]
+      ],
+      showGroupBorder: null
     }
   },
   computed: {
@@ -452,32 +466,7 @@ export default {
       return this.selectedWidget.length > 0
     },
     selectedWidgetBox() {
-      if (!this.selectedWidget.length) return {}
-      const first = this.widgets[this.selectedWidget[0]]
-      const rect = {
-        left: first.left,
-        top: first.top,
-        right: first.right,
-        bottom: first.bottom,
-        x: first.transform[0],
-        y: first.transform[1]
-      }
-      for (let i = 1; i < this.selectedWidget.length; i++) {
-        const widget = this.widgets[this.selectedWidget[i]]
-        if (widget.left < rect.left) {
-          rect.left = widget.left
-          rect.x = widget.transform[0]
-        }
-        if (widget.top < rect.top) {
-          rect.top = widget.top
-          rect.y = widget.transform[1]
-        }
-        if (widget.right > rect.right) rect.right = widget.right
-        if (widget.bottom > rect.bottom) rect.bottom = widget.bottom
-      }
-      rect.width = rect.right - rect.left
-      rect.height = rect.bottom - rect.top
-      return rect
+      return this.getRect(this.selectedWidget)
     },
     groupBoxes() {
       return this.groups.map(group => {
@@ -637,32 +626,20 @@ export default {
         this.editWidgetByKey({ index: this.selectedWidget[0], key: 'chart', value: chart })
       })
     },
-    // drag = down + move + up
-    // click = down + up
     handleMouseDown(e) {
       e.preventDefault()
       const { pageX, pageY, target } = e
       this.downPoint = [pageX, pageY]
-      // 在widget按下
+      // 在widget按下。widget能被按下时只有一种情况，就是widget未被选中
+      // 因为一旦选中必然有selected-widget-box覆盖在上面，这时点击不到widget
       if (Array.prototype.indexOf.call(target.classList, 'widget') !== -1) {
-        const widgetId = parseInt(target.dataset.id),
-              index = this.selectedWidget.indexOf(widgetId),
-              selected = index !== -1
-        // 按下ctrl
+        const widgetId = parseInt(target.dataset.id)
+        // 按下ctrl，加选
         if (e.ctrlKey) {
-          if (selected) {
-            this.removeSelectedWidget(index)
-            return
-          }
           this.addSelectedWidget(widgetId)
           return
         }
-        // 没有选中或多于一个选中
-        if (this.selectedWidget.length !== 1 || !selected) {
-          this.setSelectedWidget([widgetId])
-          return
-        }
-        // 有且只有自己被选中时，再点击时不反应
+        this.setSelectedWidget([widgetId])
         return
       }
       if (Array.prototype.indexOf.call(target.classList, 'selected-widget-box') !== -1) {
@@ -670,16 +647,15 @@ export default {
         return
       }
       // 在cursor按下
-      // 这时一定会有选中的widget, this.selectedWidget !== []
       if (Array.prototype.indexOf.call(target.classList, 'cursor') !== -1) {
         this.cursorIndex = target.dataset.cursorIndex
         this.mode = RESIZE
         return
       }
-      // 不是widget, cursor, selected-widget-box，清空选择
-        this.emptySelectedWidget()
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
+        // 清空选择
+        this.emptySelectedWidget()
         this.mode = SELECT
         return
       }
@@ -731,6 +707,39 @@ export default {
           return
         }
         // selectbox
+        return
+      }
+      if (Array.prototype.indexOf.call(e.target.classList, 'widget') !== -1) {
+        this.showGroupBorder = parseInt(e.target.dataset.id)
+        return
+      }
+      this.showGroupBorder = null
+    },
+    handleDoubleClick(e) {
+      const { target, pageX, pageY } = e
+      // 在selected-widget-box上双击，选中双击的widget
+      if (Array.prototype.indexOf.call(target.classList, 'selected-widget-box') !== -1) {
+        let match = -1
+        for (let i = 0; i < this.widgets.length; i++) {
+          const widget = this.widgets[i]
+          if (
+            (widget.left - this.canvasScroll[0] < pageX) &&
+            (widget.right - this.canvasScroll[0] > pageX) &&
+            (widget.top - this.canvasScroll[0] < pageY) &&
+            (widget.bottom - this.canvasScroll[0] > pageY)
+          ) {
+            if (match === -1 || this.widgets[match].index < widget.index) {
+              match = i
+            }
+          }
+        }
+        console.log('dblclick: ', match)
+        if (match !== -1) {
+          if (e.ctrlKey) {
+
+          }
+          this.setSelectedWidget([match])
+        }
       }
     },
     groupSelect() {
@@ -747,10 +756,9 @@ export default {
       })
       this.setSelectedWidget(selected)
     },
-    keydownHandler({ keyCode }) {
-      
+    keydownHandler(e) {
     },
-    keyupHandler() {
+    keyupHandler(e) {
     },
     scaleWidgets(diff) {
       this.widgets.forEach((widget, index) => {
@@ -851,6 +859,9 @@ export default {
         @extend .abs-element;
       }
     }
+    .selected-widget-box-background {
+      background-color: rgba($secondary-theme-color, .1);
+    }
     .selected-widget-box {
       @extend .abs-element;
       border: 1px solid lighten($secondary-theme-color, 10);
@@ -876,9 +887,9 @@ export default {
   .widget-group {
     @extend .abs-element;
     box-sizing: border-box;
-    &:hover {
-      border: 1px solid $theme-color;
-      background-color: rgba($theme-color, .2);
+    &:hover,
+    &.hover {
+      border: 1px solid $secondary-theme-color;
     }
   }
   .select-box {
