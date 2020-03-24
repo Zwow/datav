@@ -20,7 +20,23 @@ export default new Vuex.Store({
     screenWidth: 1920,
     widgets: [],
     selectedWidget: [],
-    groups: [],
+    groups: [
+      {
+        name: '分组1',
+        index: 1,
+        data: [0]
+      },
+      {
+        name: '分组2',
+        index: 2,
+        data: [1]
+      },
+      {
+        name: '分组3',
+        index: 2,
+        data: []
+      }
+    ],
     backgroundColor: '#313b44'
   },
   getters: {
@@ -97,7 +113,25 @@ export default new Vuex.Store({
     },
     group(state, indexArr) {
       const indexes = JSON.parse(JSON.stringify(indexArr || state.selectedWidget))
-      state.groups.push(indexes)
+      let index = 0
+      indexes.forEach(i => {
+        // 找出最高层，成组后整个组就取最高层的index
+        if (state.widgets[i].index > index) index = state.widgets[i].index
+        // 如果组件之前已有组，则移出组
+        for (let j = 0; j < state.groups.length; j++) {
+          const { data } = state.groups[j]
+          const exist = data.indexOf(i)
+          if (exist !== -1) {
+            data.splice(exist, 1)
+            break
+          }
+        }
+      })
+      state.groups.push({
+        name: `分组${state.groups.length + 1}`,
+        index,
+        data: indexes
+      })
       console.log('groups: ', state.groups)
     }
   }

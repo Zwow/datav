@@ -21,19 +21,6 @@
               height: `${displayScreenHeight}px`,
               backgroundColor
             }">
-          <!-- 分组 -->
-          <div class="widget-group"
-              v-for="(group, index) in groupBoxes"
-              :key="'group' + index"
-              :class="{
-                'hover': groups[index].indexOf(showGroupBorder) !== -1
-              }"
-              :style="{
-                width: `${group.width}px`,
-                height: `${group.height}px`,
-                transform: `translate3D(${group.x}px, ${group.y}px, 0)`
-              }">
-          </div>
           <div class="selected-widget-box-background"
               v-show="showSelectedWidgetBox"
               :style="{
@@ -62,7 +49,8 @@
               :style="{
                 width: `${selectedWidgetBox.width}px`,
                 height: `${selectedWidgetBox.height}px`,
-                transform: `translate3D(${selectedWidgetBox.x}px, ${selectedWidgetBox.y}px, 0)`
+                transform: `translate3D(${selectedWidgetBox.x}px, ${selectedWidgetBox.y}px, 0)`,
+                zIndex: `${widgets.length + 10}`
               }">
             <span class="cursor"
                   v-for="(cursor, index) in cursors"
@@ -112,7 +100,8 @@ class Widget {
     this.width = opt.width
     this.backgroundColor = opt.backgroundColor
     this.transform = [20, 20]
-    this.index = 0
+    this.index = opt.index || 1
+    this.name = opt.name
   }
   get left() {
     return this.transform[0] + screenRect[0]
@@ -137,7 +126,6 @@ export default {
     return {
       // drag, resize, selectbox
       mode: null,
-      cursor: 'n',
       cursorIndex: 0,
       // 鼠标downpoint
       downPoint: [],
@@ -398,13 +386,12 @@ export default {
             })
           }
         }
-      ],
-      showGroupBorder: null
+      ]
     }
   },
   computed: {
     ...mapState([
-      'widgets', 'selectedWidget', 'groups',
+      'widgets', 'selectedWidget',
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
@@ -466,29 +453,8 @@ export default {
       return this.selectedWidget.length > 0
     },
     selectedWidgetBox() {
-      return this.getRect(this.selectedWidget)
-    },
-    groupBoxes() {
-      return this.groups.map(group => {
-        return this.getRect(group)
-      })
-    }
-  },
-  watch: {
-    canvasZoomLevel(nv, old) {
-      this.scaleWidgets((nv - old) / old)
-    }
-  },
-  methods: {
-    ...mapMutations([
-      'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
-      'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
-      'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
-      'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
-    ]),
-    getRect(indexArr) {
-      if (!indexArr.length) return {}
-      const first = this.widgets[indexArr[0]]
+      if (!this.selectedWidget.length) return {}
+      const first = this.widgets[this.selectedWidget[0]]
       const rect = {
         left: first.left,
         top: first.top,
@@ -497,8 +463,8 @@ export default {
         x: first.transform[0],
         y: first.transform[1]
       }
-      for (let i = 1; i < indexArr.length; i++) {
-        const widget = this.widgets[indexArr[i]]
+      for (let i = 1; i < this.selectedWidget.length; i++) {
+        const widget = this.widgets[this.selectedWidget[i]]
         if (widget.left < rect.left) {
           rect.left = widget.left
           rect.x = widget.transform[0]
@@ -513,7 +479,20 @@ export default {
       rect.width = rect.right - rect.left
       rect.height = rect.bottom - rect.top
       return rect
-    },
+    }
+  },
+  watch: {
+    canvasZoomLevel(nv, old) {
+      this.scaleWidgets((nv - old) / old)
+    }
+  },
+  methods: {
+    ...mapMutations([
+      'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
+      'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
+      'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
+      'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
+    ]),
     // 代码优化，但过于抽象，暂时不用
     // this.chainResize([
     //   { direction: 's', vector: 1, boundary: 'top' },
@@ -571,13 +550,13 @@ export default {
             offsetValBase = widget[offsetKey] - offset
       let dimVal = widget[dimKey] * (1 + ratio),
           offsetVal = widget.transform[transformIndex] + offsetValBase * ratio
-      // if (dimVal < 0 && !overBoundary) {
-      //   console.log('######## resize got unexpected value ########')
-      //   console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${overBoundary},
-      //               ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
-      //   console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey},
-      //               offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
-      // }
+      if (dimVal < 0 && !overBoundary) {
+        console.log('######## resize got unexpected value but fixed ########')
+        console.log(`dimVal(${dimKey}): ${dimVal}, over boundary: ${overBoundary},
+                    ratio: ${ratio}, widget[dimKey]: ${widget[dimKey]}, dim: ${dim}`)
+        console.log(`index: ${index}, offset: ${offset}, transform: ${transform}, dimKey: ${dimKey},
+                    offsetKey: ${offsetKey}, transformIndex: ${transformIndex}`)
+      }
       if (overBoundary || dimVal <= 0) {
         dimVal = widget[dimKey] / dim * minValue
         offsetVal = transform + (offsetValBase / dim) * minValue
@@ -600,7 +579,9 @@ export default {
       this.addWidgets(new Widget({
         width: 100,
         height: 100,
-        backgroundColor: '#CCCCCC'
+        backgroundColor: '#CCCCCC',
+        name: `组件${this.widgets.length + 1}`,
+        index: this.widgets.length + 1
       }))
       this.setSelectedWidget([this.widgets.length - 1])
     },
@@ -709,11 +690,6 @@ export default {
         // selectbox
         return
       }
-      if (Array.prototype.indexOf.call(e.target.classList, 'widget') !== -1) {
-        this.showGroupBorder = parseInt(e.target.dataset.id)
-        return
-      }
-      this.showGroupBorder = null
     },
     handleDoubleClick(e) {
       const { target, pageX, pageY } = e
@@ -735,9 +711,6 @@ export default {
         }
         console.log('dblclick: ', match)
         if (match !== -1) {
-          if (e.ctrlKey) {
-
-          }
           this.setSelectedWidget([match])
         }
       }
@@ -796,9 +769,9 @@ export default {
       this.getScreenRect()
       // 调整画面缩放使其全部可见
       this.getProperZoomLevel()
-      this.handleNewChart()
-      this.handleNewChart()
-      this.handleNewChart()
+      this.handleNewWidget()
+      this.handleNewWidget()
+      this.handleNewWidget()
       // this.setSelectedWidget([0, 1, 2])
     })
   },
@@ -839,18 +812,20 @@ export default {
   .canvas-scroll-view {
     height: 100%;
     width: 100%;
+    z-index: 0;
   }
   .screen-wrapper {
     // fix right margin/padding issue
     display: inline-block;
     vertical-align: top;
     overflow: hidden;
+    position: relative;
+    z-index: 0;
   }
   .screen {
     box-shadow: 0 0 30px rgba(0, 0, 0, .3);
     position: relative;
     .widget {
-      overflow: hidden;
       @extend .abs-element;
       &::after {
         content: '';

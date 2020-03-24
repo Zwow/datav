@@ -56,8 +56,8 @@ export default {
   align-items: center;
   padding: 0 1%;
   .zoom-options {
+    height: 100%;
     flex: 1;
-    height: 45px;
     box-sizing: border-box;
     display: flex;
     align-items: center;

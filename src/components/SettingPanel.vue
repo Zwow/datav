@@ -37,9 +37,6 @@
             <DvIconButton class="align-button" icon="align-horizontal" title="水平分布" @on-click="handleDistribution(false)"></DvIconButton>
           </div>
         </SettingRow>
-        <SettingRow label="组别">
-          <DvButton @on-click="handleGroup">建立分组</DvButton>
-        </SettingRow>
       </div>
     </ScrollView>
   </div>
@@ -174,9 +171,6 @@ export default {
     },
     handleChange(v) {
       console.log(v)
-    },
-    handleGroup() {
-      this.group() 
     }
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="cm-icon-button" @click="(e) => $emit('on-click', e)" :title="title">
+  <div class="cm-icon-button" :class="{ 'cm-disabled-button': disabled }" @click="(e) => !disabled && $emit('on-click', e)" :title="title">
     <i :class="`iconfont icon-${icon}`" v-if="icon"></i>
     <slot></slot>
   </div>
@@ -13,7 +13,8 @@ export default {
     },
     title: {
       type: String
-    }
+    },
+    disabled: {}
   }
 }
 </script>
@@ -35,7 +36,7 @@ export default {
   transition: .2s;
   color: $font-color-dark;
   font-size: $font-size-small;
-  &:hover {
+  &:not(.cm-disabled-button):hover {
     background-color: $background-rare-dark-hover;
     color: $font-color-white;
   }
