@@ -24,17 +24,20 @@ export default new Vuex.Store({
       {
         name: '分组1',
         index: 1,
-        data: [0]
+        data: [0],
+        collapsed: true
       },
       {
         name: '分组2',
         index: 2,
-        data: [1]
+        data: [1, 2],
+        collapsed: true
       },
       {
         name: '分组3',
         index: 2,
-        data: []
+        data: [],
+        collapsed: true
       }
     ],
     backgroundColor: '#313b44'
@@ -108,15 +111,18 @@ export default new Vuex.Store({
         state.selectedWidget.push(index)
       }
     },
-    removeSelectedWidget(state, index) {
-      state.selectedWidget.splice(index, 1)
+    removeSelectedWidget(state, id) {
+      const index = state.selectedWidget.indexOf(id)
+      if (index !== -1) {
+        state.selectedWidget.splice(index, 1)
+      }
     },
     group(state, indexArr) {
       const indexes = JSON.parse(JSON.stringify(indexArr || state.selectedWidget))
-      let index = 0
+      let zLevel = 0
       indexes.forEach(i => {
-        // 找出最高层，成组后整个组就取最高层的index
-        if (state.widgets[i].index > index) index = state.widgets[i].index
+        // 找出最高层，成组后整个组就取最高层的zLevel
+        if (state.widgets[i].zLevel > zLevel) zLevel = state.widgets[i].zLevel
         // 如果组件之前已有组，则移出组
         for (let j = 0; j < state.groups.length; j++) {
           const { data } = state.groups[j]
@@ -129,10 +135,15 @@ export default new Vuex.Store({
       })
       state.groups.push({
         name: `分组${state.groups.length + 1}`,
-        index,
-        data: indexes
+        zLevel,
+        data: indexes,
+        collapsed: true
       })
       console.log('groups: ', state.groups)
+    },
+    toggleGroupCollapsed(state, index) {
+      const target = state.groups[index]
+      Vue.set(target, 'collapsed', !target.collapsed)
     }
   }
 })

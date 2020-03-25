@@ -48,7 +48,7 @@ export default {
 <style lang="scss" scoped>
 $app-header-height: 50px;
 $app-widget-list-width: 200px;
-$app-widget-setting-width: 320px;
+$app-widget-setting-width: 280px;
 
 #index {
   @mixin component-color($direction) {

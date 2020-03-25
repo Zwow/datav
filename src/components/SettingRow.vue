@@ -23,11 +23,9 @@ export default {
 .setting-row {
   display: flex;
   box-sizing: border-box;
-  margin: 24px 15px;
+  margin: 24px 10px;
   label {
     flex: 0 0 70px;
-    margin-right: 15px;
-    text-align: center;
     font-size: $font-size-small;
   }
   .content {

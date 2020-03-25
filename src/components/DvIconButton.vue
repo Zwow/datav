@@ -25,7 +25,7 @@ export default {
 .cm-icon-button {
   height: 25px;
   width: 25px;
-  border: 1px solid $border-color-dark;
+  border: 1px solid #555;
   background-color: $background-rare-dark;
   box-sizing: border-box;
   display: inline-block;

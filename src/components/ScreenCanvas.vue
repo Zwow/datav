@@ -33,6 +33,7 @@
           <div class="widget"
               ref="widget"
               v-for="(widget, index) in widgets"
+              v-show="widget.visible"
               :key="index"
               :data-id="index"
               :style="{
@@ -102,6 +103,7 @@ class Widget {
     this.transform = [20, 20]
     this.index = opt.index || 1
     this.name = opt.name
+    this.visible = opt.visible || true
   }
   get left() {
     return this.transform[0] + screenRect[0]
@@ -488,8 +490,8 @@ export default {
   },
   methods: {
     ...mapMutations([
-      'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
-      'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
+      'addWidgets', 'removeWidgets', 'editWidgetByKey',
+      'emptySelectedWidget', 'setSelectedWidget', 'addSelectedWidget', 
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),

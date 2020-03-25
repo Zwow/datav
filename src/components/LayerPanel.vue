@@ -8,17 +8,19 @@
         <div class="layer-item"
             v-for="(item, index) in layer"
             :key="index">
-          <div class="layer-item-header">
-            <div class="layer-visible-btn">
-              <i class="iconfont icon-eye"></i>
-            </div>
-            <i class="iconfont icon-arrow-down-fill layer-folder-btn"></i>
-            <div class="layer-right">
-              <i class="iconfont icon-folder"></i>
-              <div class="layer-name">
-                {{ item.name }}
-              </div>
-            </div>
+          <LayerRow :data="item"
+                    :selected="selectedGroup.indexOf(index) !== -1"
+                    @on-click="handleGroupClick">
+          </LayerRow>
+          <div class="layer-item-body"
+              v-if="item.children"
+              :style="{ height: item.collapsed ? 0 : `${28 * item.children.length}px` }">
+            <LayerRow v-for="(subMenu, menuIndex) in item.children"
+                      :key="menuIndex"
+                      :data="subMenu"
+                      :selected="selectedWidget.indexOf(menuIndex) !== -1"
+                      padding>
+            </LayerRow>
           </div>
         </div>
       </div>
@@ -36,15 +38,17 @@
 import { mapState, mapMutations } from 'vuex'
 import ScrollView from './ScrollView.vue'
 import DvIconButton from './DvIconButton.vue'
+import LayerRow from './LayerRow.vue'
 
 export default {
   components: {
     ScrollView,
-    DvIconButton
+    DvIconButton,
+    LayerRow
   },
   data() {
     return {
-      hidden: []
+      selectedGroup: []
     }
   },
   computed: {
@@ -61,6 +65,7 @@ export default {
         const lambda = (index) => {
           return {
             name: this.widgets[index].name,
+            visible: this.widgets[index].visible,
             index
           }
         }
@@ -68,7 +73,9 @@ export default {
           return {
             name: group.name,
             children: group.data.map(lambda),
-            index
+            visible: group.data.some(e => this.widgets[e].visible) || group.data.length === 0,
+            index,
+            collapsed: group.collapsed
           }
         }))
       }
@@ -79,6 +86,12 @@ export default {
     ...mapMutations(['group']),
     handleGroup() {
       this.group()
+    },
+    handleGroupClick({ ctrlKey }) {
+      if (ctrlKey) {
+        return
+      }
+      console.log(ctrlKey)
     }
   }
 }
@@ -92,45 +105,16 @@ export default {
   background-color: $background-medium-dark;
   line-height: 36px;
   padding: 0 10px;
+  border-bottom: 1px solid #1c1c1c;
+  box-sizing: border-box;
 }
 .layer-panel-body {
   height: calc(100% - 72px);
-  .layer-item-header {
-    height: 28px;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
-    border-bottom: 1px solid $border-color-dark;
-    overflow: hidden;
-    .layer-visible-btn {
-      padding: 0 10px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-right: 1px solid $border-color-dark;
-      .iconfont {
-        cursor: pointer;
-      }
-    }
-    .layer-folder-btn {
-      padding: 0 5px;
-      cursor: pointer;
-    }
-    .layer-right {
-      flex: 1;
+  .layer-wrapper {
+    background-color: #22272b;
+    .layer-item-body {
+      transition: .2s;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      .iconfont {
-        margin-right: 5px;
-      }
-      .layer-name {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
     }
   }
 }
