@@ -5,22 +5,7 @@
     </div>
     <ScrollView class="layer-panel-body">
       <div class="layer-wrapper">
-        <div class="layer-item"
-            v-for="(item, index) in layer"
-            :key="index">
-          <div class="layer-item-header">
-            <div class="layer-visible-btn">
-              <i class="iconfont icon-eye"></i>
-            </div>
-            <i class="iconfont icon-arrow-down-fill layer-folder-btn"></i>
-            <div class="layer-right">
-              <i class="iconfont icon-folder"></i>
-              <div class="layer-name">
-                {{ item.name }}
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </ScrollView>
     <div class="layer-toolbar">
@@ -40,45 +25,75 @@ import DvIconButton from './DvIconButton.vue'
 export default {
   components: {
     ScrollView,
-    DvIconButton
+    DvIconButton,
   },
   data() {
     return {
-      hidden: []
+      count: 0,
+      groups: [],
+      groups1: [
+        {
+          name: '分组1',
+          id: 0,
+          chilren: [{ widgetIndex: 0, id: 1, parentId: 0 }]
+        },
+        {
+          name: '分组2',
+          id: 2,
+          chilren: [
+            { widgetIndex: 1, id: 3, parentId: 2 },
+            { widgetIndex: 2, id: 4, parentId: 2 },
+            {
+              name: '地图组包',
+              id: 5,
+              parentId: 2,
+              chilren: [{ widgetIndex: 3, id: 6, parentId: 5 }]
+            }
+          ]
+        },
+        {
+          name: '分组3',
+          id: 7,
+          chilren: []
+        }
+      ]
     }
   },
   computed: {
-    ...mapState(['widgets', 'selectedWidget', 'groups']),
-    layer() {
-      if (this.widgets.length) {
-        const ungroupWidget = [...Array(this.widgets.length).keys()]
-        this.groups.forEach(group => {
-          group.data.forEach(e => {
-            const exist = ungroupWidget.indexOf(e)
-            exist !== -1 && ungroupWidget.splice(exist, 1)
-          })
-        })
-        const lambda = (index) => {
-          return {
-            name: this.widgets[index].name,
-            index
-          }
-        }
-        return ungroupWidget.map(lambda).concat(this.groups.map((group, index) => {
-          return {
-            name: group.name,
-            children: group.data.map(lambda),
-            index
-          }
-        }))
+    ...mapState(['widgets', 'selectedWidget']),
+  },
+  watch: {
+    'widgets.length': {
+      handler(nv, old) {
+        console.log(length, length)
       }
-      return []
+      // if (nv.length === 0) {
+      //   this.groups = []
+      //   return
+      // }
+      // // 只看变化的部分，如从2个变4个，则只看最后2个
+      // // 但减少时不一定是最后的元素，这时就需要找出来
+      // const length = old.length - nv.length
+      // let diff = []
+      // if (length < 0) {
+      //   diff = nv.slice(length)
+      // } else {
+      //   console.log(length, '次')
+      //   for (let i = 0; i < old.length && diff.length < length; i++) {
+      //     if (nv.indexOf(old[i]) !== -1) {
+      //       diff.push(old[i])
+      //     }
+      //   }
+      // }
+      // console.log('###', diff)
     }
   },
   methods: {
-    ...mapMutations(['group']),
+    // ...mapMutations([]),
     handleGroup() {
-      this.group()
+    },
+    setUpGroups() {
+      
     }
   }
 }
@@ -92,46 +107,13 @@ export default {
   background-color: $background-medium-dark;
   line-height: 36px;
   padding: 0 10px;
+  border-bottom: 1px solid #1c1c1c;
+  box-sizing: border-box;
 }
 .layer-panel-body {
   height: calc(100% - 72px);
-  .layer-item-header {
-    height: 28px;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
-    border-bottom: 1px solid $border-color-dark;
-    overflow: hidden;
-    .layer-visible-btn {
-      padding: 0 10px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-right: 1px solid $border-color-dark;
-      .iconfont {
-        cursor: pointer;
-      }
-    }
-    .layer-folder-btn {
-      padding: 0 5px;
-      cursor: pointer;
-    }
-    .layer-right {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      .iconfont {
-        margin-right: 5px;
-      }
-      .layer-name {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    }
+  .layer-wrapper {
+
   }
 }
 .layer-toolbar {

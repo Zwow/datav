@@ -33,6 +33,7 @@
           <div class="widget"
               ref="widget"
               v-for="(widget, index) in widgets"
+              v-show="widget.visible"
               :key="index"
               :data-id="index"
               :style="{
@@ -40,7 +41,7 @@
                 width: `${widget.width}px`,
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
                 backgroundColor: widget.backgroundColor,
-                zIndex: widget.index
+                zIndex: widget.zLevel
               }">
           </div>
           <!-- 组件的选中框 -->
@@ -100,8 +101,9 @@ class Widget {
     this.width = opt.width
     this.backgroundColor = opt.backgroundColor
     this.transform = [20, 20]
-    this.index = opt.index || 1
+    this.zLevel = opt.zLevel || 1
     this.name = opt.name
+    this.visible = opt.visible || true
   }
   get left() {
     return this.transform[0] + screenRect[0]
@@ -488,8 +490,8 @@ export default {
   },
   methods: {
     ...mapMutations([
-      'addWidgets', 'removeWidgets', 'editWidgetByKey', 'emptySelectedWidget',
-      'setSelectedWidget', 'addSelectedWidget', 'removeSelectedWidget',
+      'addWidgets', 'removeWidget', 'editWidgetByKey',
+      'emptySelectedWidget', 'setSelectedWidget', 'addSelectedWidget', 
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
@@ -571,19 +573,15 @@ export default {
       const rect = this.$refs.screen.getBoundingClientRect()
       screenRect = [rect.left, rect.top]
     },
-    handleDelete() {
-      this.removeWidgets(this.selectedWidget)
-      this.emptySelectedWidget()
-    },
     handleNewWidget() {
       this.addWidgets(new Widget({
         width: 100,
         height: 100,
         backgroundColor: '#CCCCCC',
         name: `组件${this.widgets.length + 1}`,
-        index: this.widgets.length + 1
+        zLevel: this.widgets.length + 1
       }))
-      this.setSelectedWidget([this.widgets.length - 1])
+      // this.setSelectedWidget([this.widgets.length - 1])
     },
     handleNewChart() {
       this.handleNewWidget()
@@ -644,6 +642,7 @@ export default {
       return
     },
     handleMouseUp({ pageX, pageY, target, ctrlKey }) {
+      // 框选
       if (this.mode === SELECT) {
         this.groupSelect()
       }
@@ -704,7 +703,7 @@ export default {
             (widget.top - this.canvasScroll[0] < pageY) &&
             (widget.bottom - this.canvasScroll[0] > pageY)
           ) {
-            if (match === -1 || this.widgets[match].index < widget.index) {
+            if (match === -1 || this.widgets[match].zLevel < widget.zLevel) {
               match = i
             }
           }
@@ -772,6 +771,10 @@ export default {
       this.handleNewWidget()
       this.handleNewWidget()
       this.handleNewWidget()
+      this.handleNewWidget()
+      setTimeout(() => {
+        this.removeWidget(3)
+      }, 3000)
       // this.setSelectedWidget([0, 1, 2])
     })
   },
@@ -801,14 +804,14 @@ export default {
 
 .screen-canvas {
   position: relative;
-  background: #2A2E33;
+  background: #2f3338;
   // 网络
   // background-image: linear-gradient(90deg, rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%), linear-gradient(rgba(180, 180, 180, 0.05) 5%, rgba(0, 0, 0, 0) 5%);
   // background-size: 15px 15px;
   // 点阵
-  background-image: linear-gradient(#2A2E33 20px, transparent 0), linear-gradient(90deg, #515151 2px, transparent 0);
+  background-image: linear-gradient(#2f3338 20px, transparent 0), linear-gradient(90deg, #666 2px, transparent 0);
   background-size: 22px 22px, 24px 24px;
-  background-position: 14px;
+  background-position: 10px;
   .canvas-scroll-view {
     height: 100%;
     width: 100%;

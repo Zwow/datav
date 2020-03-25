@@ -123,10 +123,13 @@ export default {
 @import "../scss/vars.scss";
 
 .canvas-zoomer {
-  background-color: #14181c;
+  background-color: #090909;
   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
   overflow: hidden;
   box-sizing: border-box;
+  .screen-overview {
+    box-sizing: border-box;
+  }
   .drag-handle {
     position: absolute;
     left: 0;

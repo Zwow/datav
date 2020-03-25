@@ -3,6 +3,8 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+let groupIdCounter = 0
+
 export default new Vuex.Store({
   state: {
     // screen offset from canvas
@@ -20,24 +22,8 @@ export default new Vuex.Store({
     screenWidth: 1920,
     widgets: [],
     selectedWidget: [],
-    groups: [
-      {
-        name: '分组1',
-        index: 1,
-        data: [0]
-      },
-      {
-        name: '分组2',
-        index: 2,
-        data: [1]
-      },
-      {
-        name: '分组3',
-        index: 2,
-        data: []
-      }
-    ],
-    backgroundColor: '#313b44'
+    groups: [],
+    backgroundColor: '#181818'
   },
   getters: {
     displayScreenWidth: ({ canvasZoomLevel, screenWidth }) => canvasZoomLevel * screenWidth,
@@ -78,10 +64,18 @@ export default new Vuex.Store({
       state.backgroundColor = value
     },
     addWidgets(state, widget) {
+      const init = state.widgets.length === 0
+      let length = 1
       if (Array.isArray(widget)) {
         state.widgets.push(...widget)
+        length = widget.legnth
       } else {
         state.widgets.push(widget)
+      }
+      if (init) {
+        this.commit('initGroup')
+      } else {
+        this.commit('updateGroup', length)
       }
     },
     removeWidget(state, index) {
@@ -108,31 +102,23 @@ export default new Vuex.Store({
         state.selectedWidget.push(index)
       }
     },
-    removeSelectedWidget(state, index) {
-      state.selectedWidget.splice(index, 1)
+    removeSelectedWidget(state, id) {
+      const index = state.selectedWidget.indexOf(id)
+      if (index !== -1) {
+        state.selectedWidget.splice(index, 1)
+      }
     },
-    group(state, indexArr) {
-      const indexes = JSON.parse(JSON.stringify(indexArr || state.selectedWidget))
-      let index = 0
-      indexes.forEach(i => {
-        // 找出最高层，成组后整个组就取最高层的index
-        if (state.widgets[i].index > index) index = state.widgets[i].index
-        // 如果组件之前已有组，则移出组
-        for (let j = 0; j < state.groups.length; j++) {
-          const { data } = state.groups[j]
-          const exist = data.indexOf(i)
-          if (exist !== -1) {
-            data.splice(exist, 1)
-            break
-          }
+    initGroup(state) {
+      state.groups = state.widgets.map((e, index) => {
+        return {
+          widgetIndex: index,
+          id: ++groupIdCounter
         }
       })
-      state.groups.push({
-        name: `分组${state.groups.length + 1}`,
-        index,
-        data: indexes
-      })
-      console.log('groups: ', state.groups)
+      console.log(state.groups)
+    },
+    updateGroup(state, length) {
+      console.log('haha: ', length)
     }
   }
 })
