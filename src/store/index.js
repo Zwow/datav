@@ -5,6 +5,45 @@ Vue.use(Vuex)
 
 let groupIdCounter = 0
 
+class GroupNode {
+  constructor(opt) {
+    this.name = opt.name || '分组'
+    this.data = opt.data
+    this.descendents = opt.descendents || []
+    this.parent = opt.parent
+    this.id = ++groupIdCounter
+    this.depth = opt.depth || 0
+  }
+  getNode(id) {
+    if (this.id === id) return this
+    for (let i = 0; i < this.descendents.length; i++) {
+      const target = this.descendents[i]
+      if (target.id === id){
+        return target
+      }
+      if (target.descendents.length) {
+        const exist = target.getNode(id)
+        if (exist) {
+          return exist
+        }
+      }
+    }
+    return null
+  }
+  appendChild(node) {
+    node.parent = this.id
+    node.depth = this.depth + 1
+    this.descendents.splice(0, 0, node)
+  }
+  insert(start, ...nodes) {
+    nodes.forEach(e => {
+      e.depth = this.depth + 1
+      e.parent = this.id
+    })
+    this.descendents.splice(start, 0, ...nodes)
+  }
+}
+
 export default new Vuex.Store({
   state: {
     // screen offset from canvas
@@ -22,7 +61,9 @@ export default new Vuex.Store({
     screenWidth: 1920,
     widgets: [],
     selectedWidget: [],
-    groups: [],
+    groups: new GroupNode({ name: 'root' }),
+    // 要把整个group node实例放进来
+    selectedGroupNode: [],
     backgroundColor: '#181818'
   },
   getters: {
@@ -36,7 +77,12 @@ export default new Vuex.Store({
     screenWrapperHeight: (
       { canvasHeight, SCREEN_TOP, screenHeight, canvasProperZoomLevel },
       { displayScreenHeight }
-    ) => (canvasHeight - 2 * SCREEN_TOP) / (canvasProperZoomLevel * screenHeight) * displayScreenHeight
+    ) => (canvasHeight - 2 * SCREEN_TOP) / (canvasProperZoomLevel * screenHeight) * displayScreenHeight,
+    isSiblingNode: ({ selectedGroupNode }) => {
+      if (!selectedGroupNode.length) return false
+      const parentId = selectedGroupNode[0].parent
+      return selectedGroupNode.every(e => e.parent === parentId)
+    }
   },
   mutations: {
     setCanvasZoomLevel(state, value) {
@@ -63,27 +109,22 @@ export default new Vuex.Store({
     setBackgroundColor(state, value) {
       state.backgroundColor = value
     },
-    addWidgets(state, widget) {
-      const init = state.widgets.length === 0
-      let length = 1
-      if (Array.isArray(widget)) {
-        state.widgets.push(...widget)
-        length = widget.legnth
-      } else {
-        state.widgets.push(widget)
-      }
-      if (init) {
-        this.commit('initGroup')
-      } else {
-        this.commit('updateGroup', length)
-      }
+    addWidgets({ groups, widgets }, widget) {
+      const elements = Array.isArray(widget) ? widget : [widget]
+      widgets.push(...elements)
+      elements.forEach(e => {
+        groups.appendChild(new GroupNode({
+          name: e.name,
+          data: e
+        }))
+      })
     },
-    removeWidget(state, index) {
-      if (Array.isArray(index)) {
-        state.widgets = state.widgets.filter((e, id) => this.selectedWidget.indexOf(id) === -1)
-      } else {
-        state.widgets.splice(index, 1)
+    removeWidget({ widgets }, indexes) {
+      if (Array.isArray(indexes)) {
+        widgets = widgets.filter((e, index) => indexes.indexOf(index) === -1)
+        return
       }
+      widgets.splice(indexes, 1)
     },
     editWidgetByKey(state, { index, key, value }) {
       Vue.set(state.widgets[index], key, value)
@@ -108,17 +149,31 @@ export default new Vuex.Store({
         state.selectedWidget.splice(index, 1)
       }
     },
-    initGroup(state) {
-      state.groups = state.widgets.map((e, index) => {
-        return {
-          widgetIndex: index,
-          id: ++groupIdCounter
-        }
-      })
-      console.log(state.groups)
+    addToSelectedGroup(state, groupNode) {
+      state.selectedGroupNode.push(groupNode)
     },
-    updateGroup(state, length) {
-      console.log('haha: ', length)
+    removeFromSelectedGroup({ selectedGroupNode }, groupId) {
+      const index = selectedGroupNode.findIndex(e => e.id === groupId)
+      if (index !== -1) {
+        selectedGroupNode.splice(index, 1)
+      }
+    },
+    setSelectedGroup(state, data) {
+      state.selectedGroupNode = data
+    },
+    newGroup({ groups, selectedGroupNode }) {
+      if (this.getters.isSiblingNode) {
+        const parentNode = groups.getNode(selectedGroupNode[0].parent),
+              node = new GroupNode({ name: '分组', parent: parentNode.id, depth: parentNode.depth + 1 }),
+              indexes = selectedGroupNode.map(e => parentNode.descendents.indexOf(e)).sort((a, b) => b - a)
+        indexes.forEach(i => {
+          const [item] = parentNode.descendents.splice(i, 1)
+          node.appendChild(item)
+        })
+        parentNode.insert(indexes[indexes.length - 1], node)
+        this.commit('setSelectedGroup', [node])
+        console.log(groups)
+      }
     }
   }
 })

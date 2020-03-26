@@ -772,6 +772,8 @@ export default {
       this.handleNewWidget()
       this.handleNewWidget()
       this.handleNewWidget()
+      this.handleNewWidget()
+      this.handleNewWidget()
       setTimeout(() => {
         this.removeWidget(3)
       }, 3000)
