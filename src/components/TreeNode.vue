@@ -2,7 +2,7 @@
   <div class="tree-node">
     <div class="tree-node-header"
         :class="{ selected }"
-        :style="{ paddingLeft: `${(data.depth - 1) * 22 + 15}px` }"
+        :style="{ paddingLeft: `${depth * 22 + 15}px` }"
         @click="handleToggleSelect">
       <i v-if="isGroup"
         :class="`toggle-collapsed-icon iconfont icon-arrow-${collapsed ? 'down' : 'up'}-fill`"
@@ -17,7 +17,8 @@
         :style="{ height: collapsed ? 0 : 'auto' }">
       <TreeNode v-for="(node, index) in data.descendents"
                 :key="index"
-                :data="node">
+                :data="node"
+                :depth="depth + 1">
       </TreeNode>
     </div>
   </div>
@@ -32,7 +33,7 @@ export default {
       type: Object,
       required: true
     },
-    index: {
+    depth: {
       type: Number
     }
   },

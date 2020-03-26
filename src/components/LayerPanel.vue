@@ -9,14 +9,14 @@
     <div class="layer-toolbar">
       <DvIconButton icon="up" title="上移一层"></DvIconButton>
       <DvIconButton icon="down" title="下移一层"></DvIconButton>
-      <DvIconButton icon="folder" title="创建分组" @on-click="newGroup"></DvIconButton>
+      <DvIconButton icon="folder" title="创建分组" :disabled="!isSiblingNode" @on-click="newGroup"></DvIconButton>
       <DvIconButton icon="delete" title="删除"></DvIconButton>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapMutations, mapGetters } from 'vuex'
 import ScrollView from './ScrollView.vue'
 import DvIconButton from './DvIconButton.vue'
 import WidgetGroups from './WidgetGroups.vue'
@@ -29,6 +29,7 @@ export default {
   },
   computed: {
     ...mapState(['widgets', 'selectedWidget']),
+    ...mapGetters(['isSiblingNode'])
   },
   methods: {
     ...mapMutations(['newGroup']),

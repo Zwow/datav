@@ -12,7 +12,6 @@ class GroupNode {
     this.descendents = opt.descendents || []
     this.parent = opt.parent
     this.id = ++groupIdCounter
-    this.depth = opt.depth || 0
   }
   getNode(id) {
     if (this.id === id) return this
@@ -32,12 +31,10 @@ class GroupNode {
   }
   appendChild(node) {
     node.parent = this.id
-    node.depth = this.depth + 1
     this.descendents.splice(0, 0, node)
   }
   insert(start, ...nodes) {
     nodes.forEach(e => {
-      e.depth = this.depth + 1
       e.parent = this.id
     })
     this.descendents.splice(start, 0, ...nodes)
@@ -164,7 +161,7 @@ export default new Vuex.Store({
     newGroup({ groups, selectedGroupNode }) {
       if (this.getters.isSiblingNode) {
         const parentNode = groups.getNode(selectedGroupNode[0].parent),
-              node = new GroupNode({ name: '分组', parent: parentNode.id, depth: parentNode.depth + 1 }),
+              node = new GroupNode({ name: '分组', parent: parentNode.id }),
               indexes = selectedGroupNode.map(e => parentNode.descendents.indexOf(e)).sort((a, b) => b - a)
         indexes.forEach(i => {
           const [item] = parentNode.descendents.splice(i, 1)

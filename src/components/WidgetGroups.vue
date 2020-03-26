@@ -2,7 +2,8 @@
   <div class="widget-groups">
     <TreeNode v-for="(node, index) in groups.descendents"
               :key="index"
-              :data="node">
+              :data="node"
+              :depth="0">
     </TreeNode>
   </div>
 </template>
