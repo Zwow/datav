@@ -37,12 +37,15 @@
               :key="index"
               :data-id="index"
               :style="{
+                color: '#333',
+                fontSize: '20px',
                 height: `${widget.height}px`,
                 width: `${widget.width}px`,
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
                 backgroundColor: widget.backgroundColor,
                 zIndex: widget.zLevel
               }">
+            {{ index + 1 }}
           </div>
           <!-- 组件的选中框 -->
           <div class="selected-widget-box"
@@ -491,54 +494,10 @@ export default {
   methods: {
     ...mapMutations([
       'addWidgets', 'removeWidget', 'editWidgetByKey',
-      'emptySelectedWidget', 'setSelectedWidget', 'addSelectedWidget', 
+      'setSelectedWidget', 'addSelectedWidget', 
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
-    // 代码优化，但过于抽象，暂时不用
-    // this.chainResize([
-    //   { direction: 's', vector: 1, boundary: 'top' },
-    //   { direction: 'e', vector: -1, boundary: 'right' }
-    // ])
-    chainResize(chains) {
-      const original = [this.selectedWidgetBox.width, this.selectedWidgetBox.height]
-      const params = chains.map(e => {
-        const mapping = this.mapping[e.direction]
-        return [
-          this.selectedWidgetBox[mapping.dim],
-          this.selectedWidgetBox[mapping.offset],
-          this.selectedWidgetBox[mapping.axis],
-          this.selectBoxDiff[mapping.i] / this.selectedWidgetBox[mapping.dim] * e.vector,
-          mapping.dim,
-          mapping.offset,
-          mapping.i,
-          this[`${e.boundary}Boundary`],
-          e.minValue
-        ]
-      })
-      this.selectedWidget.forEach((index) => {
-        for (let i = 0; i < params.length; i++) {
-          this.esResize(index, ...params[i])
-        }
-      })
-      const transformParams = chains.filter(e => e.vector < 0).map(e => {
-        const { i, dim } = this.mapping[e.direction]
-        return {
-          transformIndex: i,
-          value: this.selectedWidgetBox[dim] - original[i]
-        }
-      })
-      transformParams.length && this.selectedWidget.forEach((index) => {
-        for (let i = 0; i < transformParams.length; i++) {
-          const { transformIndex, value } = transformParams[i]
-          this.setWidgetTransform({
-            index,
-            transformIndex,
-            value: this.widgets[index].transform[transformIndex] - value
-          })
-        }
-      })
-    },
     // 东/南方向的缩放，其他所有的缩放可配合transform得到
     esResize(index, dim, offset, transform, ratio, dimKey, offsetKey, transformIndex, overBoundary, minValue = DIM_MIN) {
       // 可能会算出height/width(dimVal) <= 0的情况，导致错误的resize
@@ -634,7 +593,7 @@ export default {
       // 在screen或者screen-wrapper上按下，框选组件
       if (Array.prototype.some.call(target.classList, e => e === 'screen-wrapper' || e === 'screen')) {
         // 清空选择
-        this.emptySelectedWidget()
+        this.setSelectedWidget([])
         this.mode = SELECT
         return
       }
@@ -774,9 +733,6 @@ export default {
       this.handleNewWidget()
       this.handleNewWidget()
       this.handleNewWidget()
-      setTimeout(() => {
-        this.removeWidget(3)
-      }, 3000)
       // this.setSelectedWidget([0, 1, 2])
     })
   },

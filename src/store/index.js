@@ -29,6 +29,42 @@ class GroupNode {
     }
     return null
   }
+  getNodeByData(dataArr, res = []) {
+    if (this.data) {
+      const index = dataArr.indexOf(this.data)
+      if (index !== -1) {
+        dataArr.splice(index, 1)
+        res.push(this)
+      }
+      if (!dataArr.length) return res
+    }
+    for (let i = 0; i < this.descendents.length; i++) {
+      const target = this.descendents[i]
+      if (target.data) {
+        const dIndex = dataArr.indexOf(target.data)
+        if (dIndex !== -1){
+          dataArr.splice(dIndex, 1)
+          res.push(target)
+          if (!dataArr.length) return res
+        }
+      }
+      if (target.descendents.length) {
+        target.getNodeByData(dataArr, res)
+        if (!dataArr.length) return res
+      }
+    }
+    return res
+  }
+  getNodeData(res = []) {
+    if (this.data) {
+      res.push(this.data)
+      return res
+    }
+    for (let i = 0; i < this.descendents.length; i++) {
+      this.descendents[i].getNodeData(res)
+    }
+    return res
+  }
   appendChild(node) {
     node.parent = this.id
     this.descendents.splice(0, 0, node)
@@ -115,12 +151,14 @@ export default new Vuex.Store({
         }))
       })
     },
-    removeWidget({ widgets }, indexes) {
+    // todo
+    // 删除时记得把selectedWidget去掉，现在还没去，会报错
+    removeWidget(state, indexes) {
       if (Array.isArray(indexes)) {
-        widgets = widgets.filter((e, index) => indexes.indexOf(index) === -1)
+        state.widgets = state.widgets.filter((e, index) => indexes.indexOf(index) === -1)
         return
       }
-      widgets.splice(indexes, 1)
+      state.widgets.splice(indexes, 1)
     },
     editWidgetByKey(state, { index, key, value }) {
       Vue.set(state.widgets[index], key, value)
@@ -128,34 +166,65 @@ export default new Vuex.Store({
     setWidgetTransform(state, { index, transformIndex, value }) {
       Vue.set(state.widgets[index].transform, transformIndex, value)
     },
-    emptySelectedWidget(state) {
-      state.selectedWidget = []
-    },
     setSelectedWidget(state, indexArr) {
       state.selectedWidget = indexArr
+      state.selectedGroupNode = state.groups.getNodeByData(indexArr.map(e => state.widgets[e]))
     },
-    addSelectedWidget(state, index) {
-      if (state.selectedWidget.indexOf(index) === -1) {
-        state.selectedWidget.push(index)
+    addSelectedWidget({ selectedWidget, selectedGroupNode, groups, widgets }, index) {
+      if (selectedWidget.indexOf(index) === -1) {
+        selectedWidget.push(index)
+        selectedGroupNode.push(...groups.getNodeByData([widgets[index]]))
       }
     },
-    removeSelectedWidget(state, id) {
-      const index = state.selectedWidget.indexOf(id)
-      if (index !== -1) {
-        state.selectedWidget.splice(index, 1)
-      }
+    addToSelectedGroup({ selectedGroupNode, selectedWidget, widgets }, groupNode) {
+      selectedGroupNode.push(groupNode)
+      groupNode.getNodeData().forEach(n => {
+        const index = widgets.indexOf(n)
+        if (index !== -1 && selectedWidget.indexOf(index) === -1) {
+          selectedWidget.push(index)
+        }
+      })
     },
-    addToSelectedGroup(state, groupNode) {
-      state.selectedGroupNode.push(groupNode)
-    },
-    removeFromSelectedGroup({ selectedGroupNode }, groupId) {
-      const index = selectedGroupNode.findIndex(e => e.id === groupId)
+    removeFromSelectedGroup({ selectedGroupNode, selectedWidget, widgets }, groupId) {
+      const index = selectedGroupNode.findIndex(e => e.id === groupId),
+            node = selectedGroupNode[index]
       if (index !== -1) {
         selectedGroupNode.splice(index, 1)
+        const item = node.getNode(groupId)
+        if (item && item.data) {
+          const dIndex = widgets.indexOf(item.data)
+          if (dIndex !== -1) {
+            const sIndex = selectedWidget.indexOf(dIndex)
+            sIndex !== -1 && selectedWidget.splice(sIndex, 1)
+          }
+        }
       }
     },
     setSelectedGroup(state, data) {
       state.selectedGroupNode = data
+      state.selectedWidget = []
+      data.forEach(e => {
+        e.getNodeData().forEach(n => {
+          const index = state.widgets.indexOf(n)
+          if (index !== -1 && state.selectedWidget.indexOf(index) === -1) {
+            state.selectedWidget.push(index)
+          }
+        })
+      })
+    },
+    orderWidgetZlevel({ groups, widgets }) {
+      let total = widgets.length
+      const func = (data) => {
+        data.forEach(node => {
+          if (node.data) {
+            Vue.set(node.data, 'zLevel', --total)
+          } else {
+            func(node.descendents, total)
+          }
+        })
+      }
+      func(groups.descendents)
+      console.log(groups)
     },
     newGroup({ groups, selectedGroupNode }) {
       if (this.getters.isSiblingNode) {
@@ -168,7 +237,7 @@ export default new Vuex.Store({
         })
         parentNode.insert(indexes[indexes.length - 1], node)
         this.commit('setSelectedGroup', [node])
-        console.log(groups)
+        this.commit('orderWidgetZlevel')
       }
     }
   }

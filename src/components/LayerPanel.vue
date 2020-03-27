@@ -7,8 +7,8 @@
       <WidgetGroups></WidgetGroups>
     </ScrollView>
     <div class="layer-toolbar">
-      <DvIconButton icon="up" title="上移一层"></DvIconButton>
-      <DvIconButton icon="down" title="下移一层"></DvIconButton>
+      <DvIconButton icon="up" :disabled="!isSiblingNode" title="上移一层"></DvIconButton>
+      <DvIconButton icon="down" :disabled="!isSiblingNode" title="下移一层"></DvIconButton>
       <DvIconButton icon="folder" title="创建分组" :disabled="!isSiblingNode" @on-click="newGroup"></DvIconButton>
       <DvIconButton icon="delete" title="删除"></DvIconButton>
     </div>
@@ -28,7 +28,7 @@ export default {
     WidgetGroups
   },
   computed: {
-    ...mapState(['widgets', 'selectedWidget']),
+    ...mapState(['widgets', 'selectedWidget', 'selectedGroupNode']),
     ...mapGetters(['isSiblingNode'])
   },
   methods: {
@@ -61,6 +61,7 @@ export default {
   height: 36px;
   box-sizing: border-box;
   border-top: 1px solid $border-color-dark;
+  background-color: #22262b;
   padding: 0 10px;
   display: flex;
   align-items: center;

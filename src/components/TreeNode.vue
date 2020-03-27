@@ -3,17 +3,16 @@
     <div class="tree-node-header"
         :class="{ selected }"
         :data-path="path"
-        :style="{ padding: `0 5px 0 ${depth * 16 + 5}px` }">
-      <div class="toggle-btn">
-        <i v-if="isGroup"
-          :class="`toggle-collapsed-icon iconfont icon-arrow-${collapsed ? 'down' : 'up'}-fill`"
-          @click="collapsed = !collapsed">
-        </i>
-      </div>
+        :style="{ padding: `0 8px 0 ${depth * 16 + 8}px` }"
+        @click="handleToggleSelect">
       <div class="node-name">
         <i :class="`iconfont icon-${isGroup ? 'folder' : 'component'}`"></i>
         {{ data.name }}
       </div>
+      <i v-if="isGroup"
+        :class="`toggle-collapsed-icon iconfont icon-arrow-${collapsed ? 'down' : 'up'}-fill`"
+        @click.prevent.stop="collapsed = !collapsed">
+      </i>
     </div>
     <div class="tree-node-content"
         v-if="hasChild"
@@ -21,7 +20,6 @@
       <TreeNode v-for="(node, index) in data.descendents"
                 :key="index"
                 :data="node"
-                :path="`${path},${index}`"
                 :depth="depth + 1">
       </TreeNode>
     </div>
@@ -29,7 +27,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState } from 'vuex'
+import { mapMutations, mapState, mapGetters } from 'vuex'
 
 export default {
   props: {
@@ -63,17 +61,17 @@ export default {
   },
   methods: {
     ...mapMutations(['setSelectedGroup', 'addToSelectedGroup', 'removeFromSelectedGroup', 'newGroup']),
-    // handleToggleSelect({ ctrlKey }) {
-    //   if (ctrlKey) {
-    //     if (this.selected) {
-    //       this.removeFromSelectedGroup(this.data.id)
-    //       return
-    //     }
-    //     this.addToSelectedGroup(this.data)
-    //     return
-    //   }
-    //   this.setSelectedGroup([this.data])
-    // }
+    handleToggleSelect({ ctrlKey }) {
+      if (ctrlKey) {
+        if (this.selected) {
+          this.removeFromSelectedGroup(this.data.id)
+          return
+        }
+        this.addToSelectedGroup(this.data)
+        return
+      }
+      this.setSelectedGroup([this.data])
+    }
   }
 }
 </script>
@@ -88,12 +86,11 @@ export default {
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    .toggle-btn {
-      flex: 0 0 18px;
-      text-align: center;
-      .toggle-collapsed-icon {
-        cursor: pointer;
-      }
+    justify-content: space-between;
+    // border-bottom: 1px solid $border-color-dark;
+    .toggle-collapsed-icon {
+      cursor: pointer;
+      padding: 5px;
     }
     .node-name {
       .iconfont {
@@ -101,7 +98,7 @@ export default {
       }
     }
     &.selected {
-      background-color: $theme-color;
+      background-color: $background-rare-dark;
     }
   }
   .tree-node-content {
