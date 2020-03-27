@@ -25,7 +25,7 @@ export default {
 .cm-icon-button {
   height: 25px;
   width: 25px;
-  border: 1px solid #555;
+  border: 1px solid $border-color-dark;
   background-color: $background-rare-dark;
   box-sizing: border-box;
   display: inline-block;
@@ -37,9 +37,8 @@ export default {
   color: $font-color-dark;
   font-size: $font-size-small;
   &:not(.cm-disabled-button):hover {
-    background-color: $theme-color;
+    background-color: $background-rare-dark-hover;
     color: $font-color-white;
-    border-color: lighten($theme-color, 10);
   }
 }
 </style>

@@ -34,9 +34,7 @@ class GroupNode {
     this.descendents.splice(0, 0, node)
   }
   insert(start, ...nodes) {
-    nodes.forEach(e => {
-      e.parent = this.id
-    })
+    nodes.forEach(e => e.parent = this.id)
     this.descendents.splice(start, 0, ...nodes)
   }
 }
@@ -60,6 +58,7 @@ export default new Vuex.Store({
     selectedWidget: [],
     groups: new GroupNode({ name: 'root' }),
     // 要把整个group node实例放进来
+    // 方便多选时知道这些实例是不是同一个组下的
     selectedGroupNode: [],
     backgroundColor: '#181818'
   },

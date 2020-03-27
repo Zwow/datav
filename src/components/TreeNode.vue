@@ -2,13 +2,16 @@
   <div class="tree-node">
     <div class="tree-node-header"
         :class="{ selected }"
-        :style="{ paddingLeft: `${depth * 22 + 15}px` }"
-        @click="handleToggleSelect">
-      <i v-if="isGroup"
-        :class="`toggle-collapsed-icon iconfont icon-arrow-${collapsed ? 'down' : 'up'}-fill`"
-        @click="collapsed = !collapsed">
-      </i>
+        :data-path="path"
+        :style="{ padding: `0 5px 0 ${depth * 16 + 5}px` }">
+      <div class="toggle-btn">
+        <i v-if="isGroup"
+          :class="`toggle-collapsed-icon iconfont icon-arrow-${collapsed ? 'down' : 'up'}-fill`"
+          @click="collapsed = !collapsed">
+        </i>
+      </div>
       <div class="node-name">
+        <i :class="`iconfont icon-${isGroup ? 'folder' : 'component'}`"></i>
         {{ data.name }}
       </div>
     </div>
@@ -18,6 +21,7 @@
       <TreeNode v-for="(node, index) in data.descendents"
                 :key="index"
                 :data="node"
+                :path="`${path},${index}`"
                 :depth="depth + 1">
       </TreeNode>
     </div>
@@ -35,6 +39,9 @@ export default {
     },
     depth: {
       type: Number
+    },
+    path: {
+      type: [Number, String]
     }
   },
   data() {
@@ -56,17 +63,17 @@ export default {
   },
   methods: {
     ...mapMutations(['setSelectedGroup', 'addToSelectedGroup', 'removeFromSelectedGroup', 'newGroup']),
-    handleToggleSelect({ ctrlKey }) {
-      if (ctrlKey) {
-        if (this.selected) {
-          this.removeFromSelectedGroup(this.data.id)
-          return
-        }
-        this.addToSelectedGroup(this.data)
-        return
-      }
-      this.setSelectedGroup([this.data])
-    }
+    // handleToggleSelect({ ctrlKey }) {
+    //   if (ctrlKey) {
+    //     if (this.selected) {
+    //       this.removeFromSelectedGroup(this.data.id)
+    //       return
+    //     }
+    //     this.addToSelectedGroup(this.data)
+    //     return
+    //   }
+    //   this.setSelectedGroup([this.data])
+    // }
   }
 }
 </script>
@@ -81,10 +88,17 @@ export default {
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    .toggle-collapsed-icon {
-      flex: 0 0 22px;
-      cursor: pointer;
+    .toggle-btn {
+      flex: 0 0 18px;
       text-align: center;
+      .toggle-collapsed-icon {
+        cursor: pointer;
+      }
+    }
+    .node-name {
+      .iconfont {
+        color: $font-color-base;
+      }
     }
     &.selected {
       background-color: $theme-color;
