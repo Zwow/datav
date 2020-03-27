@@ -224,7 +224,6 @@ export default new Vuex.Store({
         })
       }
       func(groups.descendents)
-      console.log(groups)
     },
     newGroup({ groups, selectedGroupNode }) {
       if (this.getters.isSiblingNode) {
@@ -239,6 +238,21 @@ export default new Vuex.Store({
         this.commit('setSelectedGroup', [node])
         this.commit('orderWidgetZlevel')
       }
+    },
+    swapGroupNode({ groups, selectedGroupNode }, i) {
+      const target = groups.getNode(selectedGroupNode[0].parent).descendents,
+            maxLimit = target.length - 1
+      selectedGroupNode.forEach(e => {
+        const fromIndex = target.indexOf(e),
+              toIndex = fromIndex - i
+        if (toIndex < 0 || toIndex > maxLimit) {
+          return
+        }
+        const temp = target[toIndex]
+        Vue.set(target, toIndex, target[fromIndex])
+        Vue.set(target, fromIndex, temp)
+      })
+      this.commit('orderWidgetZlevel')
     }
   }
 })
