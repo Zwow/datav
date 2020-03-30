@@ -4,8 +4,8 @@
             :group="{ name: 'groupTree' }"
             :data-id="id"
             tag="div"
-            dragClass="drag-tree-node"
-            ghostClass="drop-tree-node"
+            drag-class="drag-tree-node"
+            ghost-class="drop-tree-node"
             :move="handleMove"
             @end="handleDragEnd">
     <div class="group-tree-node"
@@ -73,15 +73,13 @@ export default {
       this.$set(this.data[index], 'open', !this.data[index].open)
     },
     handleMove({ draggedContext, relatedContext }) {
-      console.log(draggedContext.element, relatedContext.element)
-      // const parent
-      // this.$set(draggedContext.element, 'name', '#$$$$$')
+      if (!relatedContext.element || !draggedContext.element) return false
+      console.log(draggedContext.element, relatedContext)
+      this.setSelectedGroup([draggedContext.element])
+      this.$set(draggedContext.element, 'parent', relatedContext.element.parent)
     },
     handleDragEnd(ev) {
-      this.$nextTick(() => {
-        this.orderWidgetZlevel()
-        // console.log(ev)
-      })
+      this.orderWidgetZlevel()
     }
   }
 }
@@ -98,7 +96,6 @@ export default {
     align-items: center;
     box-sizing: border-box;
     justify-content: space-between;
-    // border-bottom: 1px solid $border-color-dark;
     .toggle-collapsed-icon {
       cursor: pointer;
       padding: 5px;
@@ -114,6 +111,21 @@ export default {
   }
   .group-tree-content {
     overflow: hidden;
+  }
+  .drag-tree-node {
+    opacity: 0;
+  }
+  .drop-tree-node {
+    position: relative;
+    &::after {
+      content: '';
+      height: 2px;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      left: 0;
+      background-color: $secondary-theme-color;
+    }
   }
 }
 </style>
