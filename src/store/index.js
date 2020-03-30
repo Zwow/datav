@@ -224,7 +224,6 @@ export default new Vuex.Store({
         })
       }
       func(groups.descendents)
-      console.log(groups)
     },
     newGroup({ groups, selectedGroupNode }) {
       if (this.getters.isSiblingNode) {

@@ -2,7 +2,6 @@
   <div class="tree-node">
     <div class="tree-node-header"
         :class="{ selected }"
-        :data-path="path"
         :style="{ padding: `0 8px 0 ${depth * 16 + 8}px` }"
         @click="handleToggleSelect">
       <div class="node-name">
@@ -37,9 +36,6 @@ export default {
     },
     depth: {
       type: Number
-    },
-    path: {
-      type: [Number, String]
     }
   },
   data() {

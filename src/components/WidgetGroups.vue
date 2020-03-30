@@ -1,18 +1,14 @@
 <template>
   <div class="widget-groups">
-    <TreeNode v-for="(node, index) in groups.descendents"
-              :key="index"
-              :data="node"
-              :depth="0">
-    </TreeNode>
+    <GroupTree :data="groups.descendents" :depth="0" :id="groups.id"></GroupTree>
   </div>
 </template>
 
 <script>
 import Vue from 'vue'
 import { mapState, mapMutations } from 'vuex'
-import TreeNode from './TreeNode.vue'
-Vue.component('TreeNode', TreeNode)
+import GroupTree from './GroupTree.vue'
+Vue.component('GroupTree', GroupTree)
 
 export default {
   computed: {
