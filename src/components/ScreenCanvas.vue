@@ -140,10 +140,6 @@ export default {
       selectBoxDiff: [0, 0],
       // 左上点(pageX, pageY)
       selectBoxOrigin: [0, 0],
-      // mapping: {
-      //   e: { dim: 'width', offset: 'left', axis: 'x', i: 0 },
-      //   s: { dim: 'height', offset: 'top', axis: 'y', i: 1 },
-      // },
       cursors: [
         {
           dr: 'n', 
@@ -405,7 +401,7 @@ export default {
       return [screenRect[0] - this.SCREEN_LEFT, screenRect[1] - this.SCREEN_TOP]
     },
     ...mapGetters([
-      'displayScreenWidth', 'displayScreenHeight',
+      'displayScreenWidth', 'displayScreenHeight', 'selectedWidgetBox',
       'screenWrapperWidth', 'screenWrapperHeight'
     ]),
     // selectbox的右下角点
@@ -456,34 +452,6 @@ export default {
     },
     showSelectedWidgetBox() {
       return this.selectedWidget.length > 0
-    },
-    selectedWidgetBox() {
-      if (!this.selectedWidget.length) return {}
-      const first = this.widgets[this.selectedWidget[0]]
-      const rect = {
-        left: first.left,
-        top: first.top,
-        right: first.right,
-        bottom: first.bottom,
-        x: first.transform[0],
-        y: first.transform[1]
-      }
-      for (let i = 1; i < this.selectedWidget.length; i++) {
-        const widget = this.widgets[this.selectedWidget[i]]
-        if (widget.left < rect.left) {
-          rect.left = widget.left
-          rect.x = widget.transform[0]
-        }
-        if (widget.top < rect.top) {
-          rect.top = widget.top
-          rect.y = widget.transform[1]
-        }
-        if (widget.right > rect.right) rect.right = widget.right
-        if (widget.bottom > rect.bottom) rect.bottom = widget.bottom
-      }
-      rect.width = rect.right - rect.left
-      rect.height = rect.bottom - rect.top
-      return rect
     }
   },
   watch: {

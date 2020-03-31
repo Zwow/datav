@@ -93,7 +93,7 @@ export default {
       if (this.max !== undefined && val > this.max) {
         return this.max
       }
-      return val
+      return parseFloat(val.toFixed(this.propPrecise))
     },
     getDisplayValue() {
       if (this.propPrecise === 0) {
