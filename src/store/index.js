@@ -80,6 +80,7 @@ export default new Vuex.Store({
     // screen offset from canvas
     SCREEN_LEFT: 30,
     SCREEN_TOP: 30,
+    screenRect: [0, 0],
     // 因为初始页面显示是自适应大小，所以zoom初始化必须是1
     // 以保证第一次缩放图表时能获得正确大小
     canvasZoomLevel: 1,
@@ -114,9 +115,16 @@ export default new Vuex.Store({
       if (!selectedGroupNode.length) return false
       const parentId = selectedGroupNode[0].parent
       return selectedGroupNode.every(e => e.parent === parentId)
+    },
+    currentWidget: ({ widgets, selectedWidget }) => {
+      if (!selectedWidget.length) return {}
+      return widgets[selectedWidget[0]]
     }
   },
   mutations: {
+    setScreenRect(state, value) {
+      state.screenRect = value
+    },
     setCanvasZoomLevel(state, value) {
       state.canvasZoomLevel = Math.min(Math.max(value, .2), 1.5)
     },

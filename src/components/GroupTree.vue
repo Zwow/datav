@@ -74,7 +74,6 @@ export default {
     },
     handleMove({ draggedContext, relatedContext }) {
       if (!relatedContext.element || !draggedContext.element) return false
-      console.log(draggedContext.element, relatedContext)
       this.setSelectedGroup([draggedContext.element])
       this.$set(draggedContext.element, 'parent', relatedContext.element.parent)
     },

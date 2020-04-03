@@ -20,7 +20,7 @@
         </SettingRow>
       </div>
       <div v-show="showWidgetSetting">
-        widget setting
+        <component :is="currentWidget.component"></component>
       </div>
       <div v-show="showOtherSetting">
         <SettingRow label="对齐工具">
@@ -65,13 +65,15 @@ export default {
     DvColorPicker,
     DvInput,
     DvButton,
-    DvIconButton
+    DvIconButton,
+    SimpleBar: () => import('./SimpleBar/Setting.vue')
   },
   computed: {
     ...mapState([
       'screenHeight', 'screenWidth', 'backgroundColor',
       'widgets', 'selectedWidget'
     ]),
+    ...mapGetters(['currentWidget']),
     showScreenSetting() {
       return this.selectedWidget.length === 0
     },

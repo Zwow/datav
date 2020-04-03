@@ -31,13 +31,11 @@
           </div>
           <!-- 组件 -->
           <div class="widget"
-              ref="widget"
               v-for="(widget, index) in widgets"
               v-show="widget.visible"
               :key="index"
               :data-id="index"
               :style="{
-                color: '#333',
                 fontSize: '20px',
                 height: `${widget.height}px`,
                 width: `${widget.width}px`,
@@ -45,7 +43,7 @@
                 backgroundColor: widget.backgroundColor,
                 zIndex: widget.zLevel
               }">
-            {{ index + 1 }}
+            <component :is="widget.component" :widget-index="index"></component>
           </div>
           <!-- 组件的选中框 -->
           <div class="selected-widget-box"
@@ -96,36 +94,11 @@ const DIM_MIN = 2,
       BACKSPACE = 8,
       DELETE = 46
 
-let screenRect = []
-
-class Widget {
-  constructor(opt) {
-    this.height = opt.height
-    this.width = opt.width
-    this.backgroundColor = opt.backgroundColor
-    this.transform = [20, 20]
-    this.zLevel = opt.zLevel || 1
-    this.name = opt.name
-    this.visible = opt.visible || true
-  }
-  get left() {
-    return this.transform[0] + screenRect[0]
-  }
-  get top() {
-    return this.transform[1] + screenRect[1]
-  }
-  get right() {
-    return this.left + this.width
-  }
-  get bottom() {
-    return this.top + this.height
-  }
-}
-
 export default {
   components: {
     ScrollView,
-    CanvasZoomer
+    CanvasZoomer,
+    SimpleBar: () => import('./SimpleBar/Widget.vue')
   },
   data() {
     return {
@@ -140,10 +113,6 @@ export default {
       selectBoxDiff: [0, 0],
       // 左上点(pageX, pageY)
       selectBoxOrigin: [0, 0],
-      // mapping: {
-      //   e: { dim: 'width', offset: 'left', axis: 'x', i: 0 },
-      //   s: { dim: 'height', offset: 'top', axis: 'y', i: 1 },
-      // },
       cursors: [
         {
           dr: 'n', 
@@ -396,13 +365,13 @@ export default {
   },
   computed: {
     ...mapState([
-      'widgets', 'selectedWidget',
+      'widgets', 'selectedWidget', 'screenRect',
       'SCREEN_LEFT', 'SCREEN_TOP', 'canvasWidth', 'canvasHeight',
       'screenHeight', 'screenWidth', 'backgroundColor',
       'canvasZoomLevel', 'canvasProperZoomLevel', 'canvasScroll'
     ]),
     canvasRect() {
-      return [screenRect[0] - this.SCREEN_LEFT, screenRect[1] - this.SCREEN_TOP]
+      return [this.screenRect[0] - this.SCREEN_LEFT, this.screenRect[1] - this.SCREEN_TOP]
     },
     ...mapGetters([
       'displayScreenWidth', 'displayScreenHeight',
@@ -494,7 +463,7 @@ export default {
   methods: {
     ...mapMutations([
       'addWidgets', 'removeWidget', 'editWidgetByKey',
-      'setSelectedWidget', 'addSelectedWidget', 
+      'setSelectedWidget', 'addSelectedWidget', 'setScreenRect',
       'setCanvasZoomLevel', 'setCanvasWidth', 'setCanvasHeight',
       'setProperZoomLevel', 'setCanvasScroll', 'setWidgetTransform'
     ]),
@@ -530,7 +499,7 @@ export default {
     },
     getScreenRect() {
       const rect = this.$refs.screen.getBoundingClientRect()
-      screenRect = [rect.left, rect.top]
+      this.setScreenRect([rect.left, rect.top])
     },
     handleNewWidget() {
       this.addWidgets(new Widget({
@@ -640,7 +609,7 @@ export default {
           }
           this.$nextTick(() => {
             this.selectedWidget.forEach((index) => {
-              this.widgets[index].chart && this.widgets[index].chart.resize()
+              this.widgets[index].context.echart && this.widgets[index].context.echart.resize()
             })
           })
           return
@@ -667,7 +636,6 @@ export default {
             }
           }
         }
-        console.log('dblclick: ', match)
         if (match !== -1) {
           this.setSelectedWidget([match])
         }
@@ -697,7 +665,7 @@ export default {
         this.editWidgetByKey({ index, key: 'width', value: widget.width * (1 + diff) })
         this.editWidgetByKey({ index, key: 'transform', value: widget.transform.map((e) => e * (1 + diff)) })
         this.$nextTick(() => {
-          widget.chart && widget.chart.resize()
+          widget.context.echart && widget.context.echart.resize()
         })
       })
     },
@@ -727,13 +695,6 @@ export default {
       this.getScreenRect()
       // 调整画面缩放使其全部可见
       this.getProperZoomLevel()
-      this.handleNewWidget()
-      this.handleNewWidget()
-      this.handleNewWidget()
-      this.handleNewWidget()
-      this.handleNewWidget()
-      this.handleNewWidget()
-      // this.setSelectedWidget([0, 1, 2])
     })
   },
   beforeDestroy() {

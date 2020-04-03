@@ -10,13 +10,6 @@
             :class="{ active: index === active }"
             class="color-dark-gray"
             @click="handleActive(index)">
-          <!-- <el-tooltip effect="dark"
-                      :content="category.name"
-                      :open-delay="500"
-                      placement="right"
-                      v-if="index !== active">
-            <i :class="`${category.icon} iconfont`"></i>
-          </el-tooltip> -->
           <i :class="`${category.icon} iconfont`"></i>
         </li>
       </ul>
@@ -25,16 +18,17 @@
           <div class="child-category"
               v-for="(category, index) in categories[active].children"
               :key="index">
-            <div class="child-category-header" @click="handleToggleCategory(index)">
-              <span class="name">{{ category.name }}</span>
+            <div class="child-category-header" @click.prevent="handleToggleCategory(index)">
+              <label>{{ category.label }}</label>
               <i :class="`iconfont icon-arrow-${category.collapsed ? 'right' : 'down'} icon`"></i>
             </div>
             <div class="child-category-content" v-show="!category.collapsed">
               <div class="widget-item"
                   v-for="(widget, widgetIndex) in category.children"
-                  :key="widgetIndex">
+                  :key="widgetIndex"
+                  @click="widget.action">
                 <div class="widget-preview"></div>
-                <span class="widget-name">{{ widget.name }}</span>
+                <label>{{ widget.label }}</label>
               </div>
             </div>
           </div>
@@ -45,74 +39,70 @@
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 import ScrollView from '@/components/ScrollView.vue'
-const mem = {}
+import { Widget } from '@/global/proto'
 
 export default {
+  components: {
+    ScrollView
+  },
   data() {
     return {
-      // test: null,
       categories: [
         {
           icon: 'icon-chart',
-          name: '常规图表',
+          label: '常规图表',
           children: [
             {
-              name: '柱状图',
+              label: '柱状图',
               collapsed: false,
               children: [
                 {
-                  name: '简单柱状图'
-                },
-                {
-                  name: '水平柱状图'
-                },
-                {
-                  name: '极地柱状图'
-                },
-                {
-                  name: '多维度柱状图'
-                },
-                {
-                  name: '柱状-线图'
-                },
-                {
-                  name: '饼图'
-                },
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 500,
+                      height: 300,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        background: '#eeeeee'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                }
               ]
             },
             {
-              name: '柱状图',
+              label: '柱状图',
               collapsed: true,
-              children: [
-                {
-                  name: '简单柱状图'
-                },
-                {
-                  name: '水平柱状图'
-                }
-              ]
+              children: []
             }
           ]
         },
         {
           icon: 'icon-map',
-          name: '地图',
+          label: '地图',
           children: []
         },
         {
           icon: 'icon-text',
-          name: '文本',
+          label: '文本',
           children: []
         },
       ],
       active: 0
     }
   },
-  components: {
-    ScrollView
+  computed: {
+    ...mapState(['widgets']),
   },
   methods: {
+    ...mapMutations(['addWidgets', 'setSelectedWidget']),
     handleActive(index) {
       this.active = index
     },
@@ -120,10 +110,9 @@ export default {
       const item = this.categories[this.active].children[index], { collapsed } = item
       this.$set(this.categories[this.active].children[index], 'collapsed', !collapsed)
     },
-    update() {
+    handleNewWidget(widget) {
+      console.log(widget)
     }
-  },
-  mounted() {
   }
 }
 </script>
@@ -187,8 +176,9 @@ $header-height: 30px;
           align-items: center;
           padding: 0 10px;
           cursor: pointer;
-          .name {
+          label {
             flex: 1;
+            cursor: pointer;
           }
           .icon {
             text-align: right;

@@ -20,7 +20,9 @@ export default {
   },
   watch: {
     value(nv) {
-      this.colorPicker.applyColor(nv)
+      if (nv) {
+        this.colorPicker.applyColor(nv)
+      }
     }
   },
   mounted() {
@@ -67,6 +69,7 @@ export default {
         this.$emit('input', rgba)
         this.$emit('on-change', rgba)
       } else {
+        this.$emit('input', color)
         this.$emit('on-clear')
       }
       this.colorPicker.hide()
