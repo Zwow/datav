@@ -23,6 +23,12 @@
         <component :is="currentWidget.component"></component>
       </div>
       <div v-show="showOtherSetting">
+        <SettingRow label="组件尺寸">
+          <div class="flex-row">
+            宽<DvInputNumber class="size-input" :precise="0" v-model="selectedWidgetWidth"></DvInputNumber>
+            高<DvInputNumber class="size-input" :precise="0" v-model="selectedWidgetHeight"></DvInputNumber>
+          </div>
+        </SettingRow>
         <SettingRow label="对齐工具">
           <div class="align-row">
             <DvIconButton class="align-button" icon="align-left" title="左对齐" @on-click="handleAlignTopLeft"></DvIconButton>
@@ -69,11 +75,30 @@ export default {
     SimpleBar: () => import('./SimpleBar/Setting.vue')
   },
   computed: {
+    ...mapGetters(['selectedWidgetBox']),
     ...mapState([
       'screenHeight', 'screenWidth', 'backgroundColor',
-      'widgets', 'selectedWidget'
+      'widgets', 'selectedWidget', 'canvasZoomLevel'
     ]),
     ...mapGetters(['currentWidget']),
+    selectedWidgetWidth: {
+      get() {
+        return Math.round(this.selectedWidgetBox.width / this.canvasZoomLevel)
+      },
+      set(value) {
+        const diff = (value * this.canvasZoomLevel - this.selectedWidgetBox.width) / this.selectedWidgetBox.width
+        this.selectedWidget.forEach((index) => {
+          const target = this.widgets[index]
+          console.log('###', target)
+          this.$set(target, 'width', target.width * (1 + diff))
+        })
+      }
+    },
+    selectedWidgetHeight: {
+      get() {
+        return Math.round(this.selectedWidgetBox.height / this.canvasZoomLevel)
+      }
+    },
     showScreenSetting() {
       return this.selectedWidget.length === 0
     },

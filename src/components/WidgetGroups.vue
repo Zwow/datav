@@ -1,6 +1,6 @@
 <template>
   <div class="widget-groups">
-    <GroupTree :data="groups.descendents" :depth="0" :id="groups.id"></GroupTree>
+    <GroupTree :data="groups.descendents" :depth="0"></GroupTree>
   </div>
 </template>
 

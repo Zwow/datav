@@ -111,6 +111,34 @@ export default new Vuex.Store({
       { canvasHeight, SCREEN_TOP, screenHeight, canvasProperZoomLevel },
       { displayScreenHeight }
     ) => (canvasHeight - 2 * SCREEN_TOP) / (canvasProperZoomLevel * screenHeight) * displayScreenHeight,
+    selectedWidgetBox: ({ selectedWidget, widgets }) => {
+      if (!selectedWidget.length) return {}
+      const first = widgets[selectedWidget[0]]
+      const rect = {
+        left: first.left,
+        top: first.top,
+        right: first.right,
+        bottom: first.bottom,
+        x: first.transform[0],
+        y: first.transform[1]
+      }
+      for (let i = 1; i < selectedWidget.length; i++) {
+        const widget = widgets[selectedWidget[i]]
+        if (widget.left < rect.left) {
+          rect.left = widget.left
+          rect.x = widget.transform[0]
+        }
+        if (widget.top < rect.top) {
+          rect.top = widget.top
+          rect.y = widget.transform[1]
+        }
+        if (widget.right > rect.right) rect.right = widget.right
+        if (widget.bottom > rect.bottom) rect.bottom = widget.bottom
+      }
+      rect.width = rect.right - rect.left
+      rect.height = rect.bottom - rect.top
+      return rect
+    },
     isSiblingNode: ({ selectedGroupNode }) => {
       if (!selectedGroupNode.length) return false
       const parentId = selectedGroupNode[0].parent

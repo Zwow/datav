@@ -2,7 +2,6 @@
   <draggable class="group-tree"
             :list="data"
             :group="{ name: 'groupTree' }"
-            :data-id="id"
             tag="div"
             drag-class="drag-tree-node"
             ghost-class="drop-tree-node"
@@ -26,7 +25,7 @@
       </div>
       <div class="group-tree-content"
           :style="{ height: node.open ? 'auto' : 0 }">
-        <GroupTree :data="node.descendents" :depth="depth + 1" :id="node.id"></GroupTree>
+        <GroupTree :data="node.descendents" :depth="depth + 1"></GroupTree>
       </div>
     </div>
   </draggable>
@@ -44,13 +43,15 @@ export default {
     },
     depth: {
       type: Number
-    },
-    id: {
-      type: Number
     }
   },
   components: {
     draggable
+  },
+  data() {
+    return {
+      itemPadding: null
+    }
   },
   computed: {
     ...mapState(['selectedGroupNode', 'groups'])
@@ -76,6 +77,7 @@ export default {
       if (!relatedContext.element || !draggedContext.element) return false
       this.setSelectedGroup([draggedContext.element])
       this.$set(draggedContext.element, 'parent', relatedContext.element.parent)
+      console.log(relatedContext)
     },
     handleDragEnd(ev) {
       this.orderWidgetZlevel()
