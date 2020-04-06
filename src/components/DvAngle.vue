@@ -1,10 +1,7 @@
 <template>
   <div class="datav-angle-wrapper">
-    <div class="datav-angle"
-        @mousedown="handleMouseDown"
-        @mousemove="handleMouseMove"
-        @mouseup="handleMouseUp">
-      <div class="ref-point" :style="{ transform: `translate3D(${refpoint[0] - 1}px, ${refpoint[1] - 1}px, 0)` }"></div>
+    <div class="datav-angle" ref="dom">
+      <div class="ref-point" :style="{ left: `${refPoint[0]}px`, top: `${refPoint[1]}px` }"></div>
     </div>
   </div>
 </template>
@@ -22,53 +19,78 @@ export default {
       }
     }
   },
+  inject: ['eventhub'],
   data() {
     return {
       drag: false,
       angle: 0,
-      downpoint: [0, 0],
-      refpoint: [RADIUS, 0]
+      downPoint: [0, 0],
+      refPoint: [RADIUS, 0],
+      centerPoint: [0, 0]
     }
   },
   watch: {
-    value(nv, old) {
-      if (nv !== old) {
-        this.angleToPoint()
+    value(nv) {
+      if (nv !== this.angle) {
+        this.refPoint = this.angleToPoint(nv)
       }
     }
   },
   methods: {
-    handleMouseDown({ offsetX, offsetY }) {
-      this.drag = true
-      this.downpoint = [offsetX, offsetY]
-      this.refpoint = [offsetX, offsetY]
+    handleMouseDown({ target, offsetX, offsetY, pageX, pageY }) {
+      if (target === this.$refs.dom) {
+        this.drag = true
+        this.downPoint = [offsetX, offsetY]
+        this.refPoint = [offsetX, offsetY]
+        this.centerPoint = [
+          pageX - offsetX + RADIUS,
+          pageY - offsetY + RADIUS
+        ]
+      }
     },
-    handleMouseMove({ offsetX, offsetY }) {
+    handleMouseMove(e) {
       if (this.drag) {
-        this.refpoint = [offsetX, offsetY]
-        this.pointToAngle()
+        e.preventDefault()
+        const { target, offsetX, offsetY, pageX, pageY } = e
+        if (target === this.$refs.dom) {
+          this.refPoint = [offsetX, offsetY]
+          this.angle = this.pointToAngle(...this.refPoint)
+        } else {
+          this.angle = this.pointToAngle(pageX, pageY, this.centerPoint[0], this.centerPoint[1])
+          this.refPoint = this.angleToPoint(this.angle)
+        }
+        this.$emit('input', this.angle)
       }
     },
     handleMouseUp() {
       this.drag = false
-      this.downpoint = [0, 0]
+      this.downPoint = [0, 0]
     },
-    angleToPoint() {
-      this.refpoint = [
-        RADIUS + RADIUS * Math.cos(Math.PI / 180 * this.angle - Math.PI / 2),
-        RADIUS + RADIUS * Math.sin(Math.PI / 180 * this.angle - Math.PI / 2)
+    angleToPoint(angle) {
+      return [
+        RADIUS + RADIUS * Math.cos(Math.PI / 180 * angle - Math.PI / 2),
+        RADIUS + RADIUS * Math.sin(Math.PI / 180 * angle - Math.PI / 2)
       ]
     },
-    pointToAngle() {
-      this.angle = -(Math.atan2(this.refpoint[0] - RADIUS, this.refpoint[1] - RADIUS) * 180 / Math.PI - 180)
-      this.$emit('input', this.angle)
+    pointToAngle(x, y, cx = RADIUS, cy = RADIUS) {
+      const angle = Math.atan2(x - cx, y - cy) * 180 / Math.PI
+      // 转到0 - 360度
+      return 180 - angle
     }
   },
   created() {
+    this.eventhub.$on('on-mousedown', this.handleMouseDown)
+    this.eventhub.$on('on-mousemove', this.handleMouseMove)
+    this.eventhub.$on('on-mouseup', this.handleMouseUp)
     if (this.value) {
       this.angle = this.value
-      this.angleToPoint()
+      this.refPoint = this.angleToPoint(this.angle)
     }
+  },
+  beforeDestroy() {
+    this.eventhub.$off('on-mousedown', this.handleMouseDown)
+    this.eventhub.$off('on-mousemove', this.handleMouseMove)
+    this.eventhub.$off('on-mouseup', this.handleMouseUp)
   }
 }
 </script>
@@ -101,6 +123,7 @@ export default {
     border-radius: 50%;
     pointer-events: none;
     background-color: #444;
+    transform: translate3d(-50%, -50%, 0);
   }
 }
 </style>

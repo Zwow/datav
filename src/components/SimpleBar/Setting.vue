@@ -15,10 +15,17 @@
     <SettingRow label="背景颜色">
       <DvColorPicker v-model="background"></DvColorPicker>
     </SettingRow>
-    <SettingRow label="旋转角度">
+    <SettingRow label="旋转角度" >
       <div class="flex-row justify-start">
-        <DvAngle :value="90"></DvAngle>
-        <DvInputNumber class="input-number widget-rotate" :precise="0" :min="360"></DvInputNumber>
+        <DvAngle v-model="angle"></DvAngle>
+        <DvInputNumber v-model="inputAngle"
+                      class="input-number widget-rotate"
+                      :precise="0"
+                      :min="0"
+                      :max="360"
+                      :show-btn="false"
+                      suffix="°">
+        </DvInputNumber>
       </div>
     </SettingRow>
   </div>
@@ -86,6 +93,22 @@ export default {
       set(value) {
         this.$set(this.widgets[this.selectedWidget[0]].context, 'background', value)
       }
+    },
+    angle: {
+      get() {
+        return this.currentWidget.rotate
+      },
+      set(value) {
+        this.$set(this.widgets[this.selectedWidget[0]], 'rotate', value)
+      }
+    },
+    inputAngle: {
+      get() {
+        return Math.round(this.currentWidget.rotate)
+      },
+      set(value) {
+        this.$set(this.widgets[this.selectedWidget[0]], 'rotate', value)
+      }
     }
   }
 }
@@ -106,6 +129,7 @@ export default {
   }
   .widget-rotate {
     margin-left: 10px;
+    width: 66px;
   }
 }
 </style>

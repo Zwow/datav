@@ -86,17 +86,15 @@ export default {
         return Math.round(this.selectedWidgetBox.width / this.canvasZoomLevel)
       },
       set(value) {
-        const diff = (value * this.canvasZoomLevel - this.selectedWidgetBox.width) / this.selectedWidgetBox.width
-        this.selectedWidget.forEach((index) => {
-          const target = this.widgets[index]
-          console.log('###', target)
-          this.$set(target, 'width', target.width * (1 + diff))
-        })
+        
       }
     },
     selectedWidgetHeight: {
       get() {
         return Math.round(this.selectedWidgetBox.height / this.canvasZoomLevel)
+      },
+      set(value) {
+        
       }
     },
     showScreenSetting() {

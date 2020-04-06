@@ -1,7 +1,9 @@
 <template>
   <div id="index"
       class="h-w-100"
-      @mousemove="handleMouseMove">
+      @mousedown="eventhub.$emit('on-mousedown', $event)"
+      @mousemove="eventhub.$emit('on-mousemove', $event)"
+      @mouseup="eventhub.$emit('on-mouseup', $event)">
     <AppHeader class="app-header"></AppHeader>
     <div class="app-body">
       <WidgetList class="widget-list"></WidgetList>
@@ -18,6 +20,7 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import WidgetList from '@/components/WidgetList.vue'
 import ScreenCanvas from '@/components/ScreenCanvas.vue'
@@ -27,9 +30,6 @@ import LayerPanel from '@/components/LayerPanel.vue'
 
 export default {
   name: 'index',
-  data() {
-    return {}
-  },
   components: {
     AppHeader,
     WidgetList,
@@ -38,8 +38,14 @@ export default {
     SettingPanel,
     LayerPanel
   },
-  methods: {
-    handleMouseMove(e) {
+  data() {
+    return {
+      eventhub: new Vue()
+    }
+  },
+  provide() {
+    return {
+      eventhub: this.eventhub
     }
   }
 }
