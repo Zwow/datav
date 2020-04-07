@@ -1,5 +1,5 @@
 <template>
-  <div class="cm-input-wrapper"
+  <div class="dv-input-wrapper"
       :class="{ [`suffix${suffixIcon ? '-icon' : ''}`]: suffixIcon || suffix, [`prefix${prefixIcon ? '-icon' : ''}`]: prefixIcon || prefix }"
       :data-suffix="suffix"
       :data-prefix="prefix">
@@ -9,8 +9,8 @@
           @input="handleInput"
           @focus="$emit('on-focus')"
           @blur="$emit('on-blur')">
-    <i v-if="prefixIcon" :class="`cm-prefix-icon iconfont icon-${prefixIcon}`"></i>
-    <i v-if="suffixIcon" :class="`cm-suffix-icon iconfont icon-${suffixIcon}`"></i>
+    <i v-if="prefixIcon" :class="`dv-prefix-icon iconfont icon-${prefixIcon}`"></i>
+    <i v-if="suffixIcon" :class="`dv-suffix-icon iconfont icon-${suffixIcon}`"></i>
   </div>
 </template>
 
@@ -64,7 +64,7 @@ export default {
 <style lang="scss" scoped>
 @import "../scss/vars.scss";
 
-.cm-input-wrapper {
+.dv-input-wrapper {
   position: relative;
   width: 100%;
   input {
@@ -116,13 +116,13 @@ export default {
   }
   &.prefix-icon {
     @include input-padding(prefix);
-    .cm-prefix-icon {
+    .dv-prefix-icon {
       left: 5px;
     }
   }
   &.suffix-icon {
     @include input-padding(suffix);
-    .cm-suffix-icon {
+    .dv-suffix-icon {
       right: 5px;
     }
   }

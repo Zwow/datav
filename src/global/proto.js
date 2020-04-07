@@ -7,6 +7,7 @@ class Widget {
     this.transform = [100, 100]
     this.zLevel = opt.zLevel || 1
     this.rotate = opt.rotate || 0
+    this.backgroundColor = opt.backgroundColor || null
     this.name = opt.name
     this.component = opt.component
     this.visible = opt.visible || true

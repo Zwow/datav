@@ -1,5 +1,5 @@
 <template>
-  <div class="datav-angle-wrapper">
+  <div class="datav-angle-wrapper" :class="{ 'datav-angle-wrapper-drag-glow': drag }">
     <div class="datav-angle" ref="dom">
       <div class="ref-point" :style="{ left: `${refPoint[0]}px`, top: `${refPoint[1]}px` }"></div>
     </div>
@@ -79,18 +79,18 @@ export default {
     }
   },
   created() {
-    this.eventhub.$on('on-mousedown', this.handleMouseDown)
-    this.eventhub.$on('on-mousemove', this.handleMouseMove)
-    this.eventhub.$on('on-mouseup', this.handleMouseUp)
+    document.body.addEventListener('mousedown', this.handleMouseDown)
+    document.body.addEventListener('mousemove', this.handleMouseMove)
+    document.body.addEventListener('mouseup', this.handleMouseUp)
     if (this.value) {
       this.angle = this.value
       this.refPoint = this.angleToPoint(this.angle)
     }
   },
   beforeDestroy() {
-    this.eventhub.$off('on-mousedown', this.handleMouseDown)
-    this.eventhub.$off('on-mousemove', this.handleMouseMove)
-    this.eventhub.$off('on-mouseup', this.handleMouseUp)
+    document.body.removeEventListener('mousedown', this.handleMouseDown)
+    document.body.removeEventListener('mousemove', this.handleMouseMove)
+    document.body.removeEventListener('mouseup', this.handleMouseUp)
   }
 }
 </script>
@@ -101,10 +101,18 @@ export default {
 .datav-angle-wrapper{
   padding: 2px;
   display: inline-block;
-  background-color: #eee;
+  background-color: #fff;
   border: 1px solid $border-color-dark;
   box-sizing: border-box;
   border-radius: 50%;
+  transition: .5s;
+  &.datav-angle-wrapper-drag-glow {
+    border-color: $theme-color;
+    box-shadow: 0 0 10px $theme-color;
+    .ref-point {
+      background-color: #333;
+    }
+  }
 }
 .datav-angle {
   display: inline-block;

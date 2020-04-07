@@ -63,13 +63,13 @@ export default {
                   name: 'SimpleBar',
                   action: () => {
                     this.addWidgets(new Widget({
-                      width: 500,
-                      height: 300,
+                      width: 300,
+                      height: 400,
                       name: `简单柱状图${this.widgets.length + 1}`,
                       zLevel: this.widgets.length + 1,
                       component: 'SimpleBar',
                       context: {
-                        background: '#eeeeee'
+                        // backgroundColor: '#ffffff'
                       }
                     }))
                     this.setSelectedWidget([this.widgets.length - 1])
@@ -80,7 +80,297 @@ export default {
             {
               label: '柱状图',
               collapsed: true,
-              children: []
+              children: [
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                },
+                {
+                  label: '简单柱状图',
+                  name: 'SimpleBar',
+                  action: () => {
+                    this.addWidgets(new Widget({
+                      width: 300,
+                      height: 400,
+                      name: `简单柱状图${this.widgets.length + 1}`,
+                      zLevel: this.widgets.length + 1,
+                      component: 'SimpleBar',
+                      context: {
+                        // backgroundColor: '#ffffff'
+                      }
+                    }))
+                    this.setSelectedWidget([this.widgets.length - 1])
+                  }
+                }
+              ]
             }
           ]
         },

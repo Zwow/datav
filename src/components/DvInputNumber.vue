@@ -1,6 +1,6 @@
 <template>
-  <div class="cm-input-number-wrapper">
-    <div class="cm-input-number" :class="{ 'input-focus': false }">
+  <div class="dv-input-number-wrapper">
+    <div class="dv-input-number" :class="{ 'input-focus': false }">
       <DvInput v-bind="$attrs"
               v-model="input"
               @on-blur="handleBlur"
@@ -122,13 +122,13 @@ export default {
 <style lang="scss">
 @import "../scss/vars.scss";
 
-.cm-input-number-wrapper {
+.dv-input-number-wrapper {
   display: inline-block;
   width: 100px;
   color: $font-color-white;
 }
 
-.cm-input-number {
+.dv-input-number {
   position: relative;
   overflow: hidden;
   .btn-suffix {

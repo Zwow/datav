@@ -1,16 +1,16 @@
 <template>
-  <div class="cm-slider-wrapper">
-    <div class="cm-slider"
+  <div class="dv-slider-wrapper">
+    <div class="dv-slider"
         @mousedown.stop="handleMouseDown"
         ref="slider">
-      <div class="cm-slider-handle"
+      <div class="dv-slider-handle"
           ref="handle"
           :class="{ dragging: drag }"
           :style="{ transform: `translate3D(${length}px, 0, 0)` }">
       </div>
     </div>
     <label v-if="showValue && !showInput">{{ `${prefix}${value}${suffix}` }}</label>
-    <DvInputNumber class="cm-input-number"
+    <DvInputNumber class="dv-input-number"
                   :style="{ width: `${inputWidth}px` }"
                   v-if="showInput"
                   :max="max"
@@ -125,11 +125,11 @@ export default {
 <style lang="scss" scoped>
 @import "../scss/vars.scss";
 
-.cm-slider-wrapper {
+.dv-slider-wrapper {
   display: flex;
   align-items: center;
   width: 100%;
-  .cm-slider {
+  .dv-slider {
     height: 20px;
     position: relative;
     flex: 1;
@@ -146,7 +146,7 @@ export default {
       left: 0;
       transform: translate3d(0, -50%, 0);
     }
-    .cm-slider-handle {
+    .dv-slider-handle {
       position: absolute;
       top: 10%;
       width: 8px;

@@ -1,5 +1,5 @@
 <template>
-  <button :class="`cm-button ${size}`" @click="handleClick">
+  <button :class="`dv-button ${size}`" @click="handleClick">
     <i :class="`iconfont icon-${icon}`" v-if="icon"></i><slot></slot>
   </button>
 </template>
@@ -27,7 +27,7 @@ export default {
 <style lang="scss" scoped>
 @import "../scss/vars.scss";
 
-.cm-button {
+.dv-button {
   border: none;
   color: $font-color-white;
   outline: none;

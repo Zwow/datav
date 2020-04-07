@@ -1,5 +1,11 @@
 <template>
-  <div class="cm-icon-button" :class="{ 'cm-disabled-button': disabled }" @click="(e) => !disabled && $emit('on-click', e)" :title="title">
+  <div class="dv-icon-button"
+      :class="{
+        'dv-disabled-button': disabled,
+        'dv-button-checked': !disabled && checked
+      }"
+      @click="handleClick"
+      :title="title">
     <i :class="`iconfont icon-${icon}`" v-if="icon"></i>
     <slot></slot>
   </div>
@@ -8,13 +14,47 @@
 <script>
 export default {
   props: {
+    value: {},
     icon: {
       type: String
     },
     title: {
       type: String
     },
+    type: {
+      type: String,
+      default: 'button',
+      validator(value) {
+        return ['button', 'checkbox'].indexOf(value) !== -1
+      }
+    },
     disabled: {}
+  },
+  data() {
+    return {
+      checked: false
+    }
+  },
+  watch: {
+    value(nv) {
+      this.checked = nv
+    }
+  },
+  methods: {
+    handleClick(e) {
+      if (!this.disabled) {
+        if (this.type === 'button') {
+          this.$emit('on-click', e)
+        } else {
+          this.checked = !this.checked
+          this.$emit('input', this.checked)
+          this.$emit('on-change', this.checked)
+        }
+      }
+    }
+  },
+  created() {
+    this.checked = this.value
   }
 }
 </script>
@@ -22,7 +62,7 @@ export default {
 <style lang="scss" scoped>
 @import "../scss/vars.scss";
 
-.cm-icon-button {
+.dv-icon-button {
   height: 25px;
   width: 25px;
   border: 1px solid $border-color-dark;
@@ -36,9 +76,14 @@ export default {
   transition: .2s;
   color: $font-color-dark;
   font-size: $font-size-small;
-  &:not(.cm-disabled-button):hover {
+  &:not(.dv-disabled-button):not(.dv-button-checked):hover {
     background-color: $background-rare-dark-hover;
     color: $font-color-white;
+  }
+  &.dv-button-checked {
+    border-color: $theme-color;
+    color: #ddd;
+    background-color: rgba($theme-color, .5);
   }
 }
 </style>

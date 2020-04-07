@@ -22,6 +22,21 @@ export default {
       scrollbar: null
     }
   },
+  // 如果在scroolview中有嵌套其他子级的组件，必须要在子级的组件有高度/宽度改变时，
+  // 在updated方法中注入并调用updateScrollbar，保证scrollbar是正确显示的。
+  // 如子组件是一个高度收缩的组件，在撑开的情况下滚动到底部，此时合上该组件，
+  // 但滚动条依然存在，滚动高度仍停留在撑开的高度，这是不正确的，调用scrollbar.update
+  // 后才是正常的显示效果。如果dom没有子组件嵌套则不需要调用，这时这里的updated
+  // 事件已经能捕捉到
+  provide() {
+    return {
+      updateScrollbar: () => {
+        this.$nextTick(() => {
+          this.scrollbar.update()
+        })
+      }
+    }
+  },
   watch: {
     scroll: {
       handler(nv) {

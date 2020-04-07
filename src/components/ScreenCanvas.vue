@@ -40,7 +40,8 @@
                 height: `${widget.height}px`,
                 width: `${widget.width}px`,
                 transform: `translate3D(${widget.transform[0]}px, ${widget.transform[1]}px, 0)`,
-                backgroundColor: widget.backgroundColor,
+                backgroundColor: widget.context.backgroundColor,
+                backgroundImage: `url(${widget.context.backgroundImage})`,
                 zIndex: widget.zLevel
               }">
             <component :is="widget.component" :widget-index="index"></component>
@@ -477,7 +478,7 @@ export default {
       this.addWidgets(new Widget({
         width: 100,
         height: 100,
-        backgroundColor: '#CCCCCC',
+        backgroundColor: 'red',
         name: `组件${this.widgets.length + 1}`,
         zLevel: this.widgets.length + 1
       }))

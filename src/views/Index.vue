@@ -1,9 +1,5 @@
 <template>
-  <div id="index"
-      class="h-w-100"
-      @mousedown="eventhub.$emit('on-mousedown', $event)"
-      @mousemove="eventhub.$emit('on-mousemove', $event)"
-      @mouseup="eventhub.$emit('on-mouseup', $event)">
+  <div id="index" class="h-w-100">
     <AppHeader class="app-header"></AppHeader>
     <div class="app-body">
       <WidgetList class="widget-list"></WidgetList>

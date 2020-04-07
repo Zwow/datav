@@ -31,18 +31,35 @@ export default {
   mounted() {
     const chart = echarts.init(this.$refs.container)
     chart.setOption({
+      grid: {
+        left: 40
+      },
       xAxis: {
         type: 'category',
         data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        axisTick: { show: false }
+        axisTick: { show: false },
+        axisLine: { show: false },
+        axisLabel: {
+          color: '#ffffff'
+        }
       },
       yAxis: {
         type: 'value',
-        axisTick: { show: false }
+        axisTick: { show: false },
+        axisLine: { show: false },
+        splitLine: { show: false },
+        axisLabel: {
+          color: '#ffffff'
+        }
       },
       series: [{
         data: [120, 200, 150, 80, 70, 110, 130],
-        type: 'bar'
+        type: 'bar',
+        barWidth: '40%',
+        itemStyle: {
+          barBorderRadius: [2, 2, 0, 0],
+          color: '#6451f7'
+        }
       }]
     })
     this.chart = chart

@@ -10,7 +10,7 @@ export default {
   props: {
     value: {
       type: String,
-      default: 'rgba(66, 68, 90, 1)'
+      default: null
     }
   },
   data() {

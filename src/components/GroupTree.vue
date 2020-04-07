@@ -45,6 +45,7 @@ export default {
       type: Number
     }
   },
+  inject: ['updateScrollbar'],
   components: {
     draggable
   },
@@ -82,6 +83,9 @@ export default {
     handleDragEnd(ev) {
       this.orderWidgetZlevel()
     }
+  },
+  updated() {
+    this.updateScrollbar()
   }
 }
 </script>
