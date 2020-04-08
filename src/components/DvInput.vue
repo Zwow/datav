@@ -4,13 +4,15 @@
       :data-suffix="suffix"
       :data-prefix="prefix">
     <input type="text"
+          ref="input"
           :value="inputValue"
           :placeholder="placeholder"
+          v-bind="$attrs"
           @input="handleInput"
-          @focus="$emit('on-focus')"
-          @blur="$emit('on-blur')">
-    <i v-if="prefixIcon" :class="`dv-prefix-icon iconfont icon-${prefixIcon}`"></i>
-    <i v-if="suffixIcon" :class="`dv-suffix-icon iconfont icon-${suffixIcon}`"></i>
+          @focus="$emit('on-focus', $event)"
+          @blur="$emit('on-blur', $event)">
+    <i v-if="prefixIcon" :class="`dv-prefix-icon iconfont icon-${prefixIcon}`" @click="$emit('on-icon-click', $event)"></i>
+    <i v-if="suffixIcon" :class="`dv-suffix-icon iconfont icon-${suffixIcon}`" @click="$emit('on-icon-click', $event)"></i>
   </div>
 </template>
 

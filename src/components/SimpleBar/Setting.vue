@@ -17,9 +17,9 @@
     </SettingRow>
     <SettingRow label="背景图">
       <DvInput v-model="backgroundUrl" placeholder="请输入图片链接" suffix-icon="link"></DvInput>
-      <div class="background-options mt-20">
-        <DvIconButton class="background-icon-button" icon="cover" type="checkbox" title="拉伸至铺满"></DvIconButton>
-        <DvIconButton class="background-icon-button" icon="infinite" type="checkbox" title="背景重复"></DvIconButton>
+      <div class="mt-20">
+        <DvIconButton class="icon-checkbox" icon="cover" type="checkbox" title="拉伸至铺满"></DvIconButton>
+        <DvIconButton class="icon-checkbox" icon="infinite" type="checkbox" title="背景重复"></DvIconButton>
       </div>
     </SettingRow>
     <SettingRow label="旋转角度" >
@@ -35,9 +35,10 @@
         </DvInputNumber>
       </div>
     </SettingRow>
+    <DvSelect></DvSelect>
     <DvCollapse class="border-top">
       <template slot="header">
-        图表设置
+        样式设置
       </template>
       <div>
         <SettingRow label="图表位置">
@@ -49,6 +50,25 @@
             右<DvInputNumber class="input-number" :precise="0" :min="2" v-model="left"></DvInputNumber>
             下<DvInputNumber class="input-number" :precise="0" :min="2" v-model="top"></DvInputNumber>
           </div>
+        </SettingRow>
+        <SettingRow label="柱宽">
+          <DvInputNumber class="input-number" :precise="0" :min="1" :max="100" suffix="%" :show-btn="false" v-model="left"></DvInputNumber>
+        </SettingRow>
+        <SettingRow label="颜色">
+          <DvColorPicker v-model="background"></DvColorPicker>
+        </SettingRow>
+        <SettingRow label="X轴">
+          <div class="flex-row">
+            <DvIconButton class="icon-checkbox" icon="horizontal-line" type="checkbox" title="显示轴线"></DvIconButton>
+            <div class="flex-row">
+              <DvInputNumber class="mr-10 mini-input-number" suffix="px" :show-btn="false" :precise="0" :min="1" :max="100" v-model="left"></DvInputNumber>
+              <DvColorPicker v-model="background"></DvColorPicker>
+            </div>
+          </div>
+          <div class="flex-row mt-20">
+            <DvIconButton class="icon-checkbox" icon="horizontal-grid" type="checkbox" title="显示网格线"></DvIconButton>
+          </div>
+          <DvSelect></DvSelect>
         </SettingRow>
       </div>
     </DvCollapse>
@@ -64,6 +84,7 @@ import DvColorPicker from '../DvColorPicker.vue'
 import DvAngle from '../DvAngle.vue'
 import DvIconButton from '../DvIconButton.vue'
 import DvCollapse from '../DvCollapse.vue'
+import DvSelect from '../DvSelect.vue'
 
 export default {
   components: {
@@ -73,7 +94,8 @@ export default {
     DvColorPicker,
     DvAngle,
     DvIconButton,
-    DvCollapse
+    DvCollapse,
+    DvSelect
   },
   computed: {
     ...mapState(['widgets', 'selectedWidget', 'canvasZoomLevel']),
@@ -166,14 +188,15 @@ export default {
   .input-number {
     width: 72px;
   }
+  .mini-input-number {
+    width: 56px;
+  }
   .widget-rotate {
     margin-left: 10px;
     width: 66px;
   }
-  .background-options {
-    .background-icon-button {
-      margin-right: 3px;
-    }
+  .icon-checkbox {
+    margin-right: 3px;
   }
 }
 </style>

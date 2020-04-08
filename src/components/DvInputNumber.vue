@@ -124,6 +124,7 @@ export default {
 
 .dv-input-number-wrapper {
   display: inline-block;
+  vertical-align: top;
   width: 100px;
   color: $font-color-white;
 }
