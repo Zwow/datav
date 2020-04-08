@@ -7,6 +7,7 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@popperjs/core": "^2.2.1",
     "@simonwep/pickr": "^1.5.0",
     "core-js": "^3.4.4",
     "echarts": "^4.6.0",

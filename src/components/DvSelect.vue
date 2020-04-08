@@ -1,13 +1,14 @@
 <template>
   <div class="datav-select">
     <DvInput readonly
+            ref="handler"
             :value="selectedItem"
             :placeholder="placeholder"
             @on-focus="handleFocus"
             @on-blur="handleBlur"
-            :suffix-icon="`arrow-${showList ? 'up' : 'down'}-fill`"></DvInput>
-    <div class="datav-select-list"
-        v-show="showList">
+            :suffix-icon="`arrow-${showList ? 'up' : 'down'}-fill`">
+    </DvInput>
+    <div class="datav-select-list" ref="list">
       <div class="datav-select-list-item"
           v-for="(item, index) in options"
           :key="index">
@@ -18,6 +19,7 @@
 </template>
 
 <script>
+import { createPopper } from '@popperjs/core'
 import DvInput from './DvInput.vue'
 
 export default {
@@ -57,7 +59,8 @@ export default {
   },
   data() {
     return {
-      showList: false
+      showList: false,
+      popper: null
     }
   },
   computed: {
@@ -67,12 +70,17 @@ export default {
   },
   methods: {
     handleFocus() {
-      console.log('focus')
-      this.showList = !this.showList
+      const { width } = getComputedStyle(this.$refs.handler.$el, null)
+      this.$refs.list.style.width = width
+      this.$refs.list.setAttribute('data-show', '')
+      this.popper.update()
     },
     handleBlur() {
-      this.showList = false
+      this.$refs.list.removeAttribute('data-show', '')
     }
+  },
+  mounted() {
+    this.popper = createPopper(this.$refs.handler.$el, this.$refs.list, { placement: 'bottom' })
   }
 }
 </script>
@@ -83,14 +91,16 @@ export default {
 .datav-select {
   position: relative;
   .datav-select-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     border: 1px solid #222;
-    margin-top: 5px;
     background-color: #444;
-    z-index: 6;
+    box-sizing: border-box;
+    z-index: 3;
+    font-size: $font-size-base;
+    color: $font-color-white;
+    display: none;
+    &[data-show] {
+      display: block;
+    }
     .datav-select-list-item {
       height: 26px;
       padding: 0 10px;
